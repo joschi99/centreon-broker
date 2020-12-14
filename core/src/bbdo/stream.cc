@@ -502,9 +502,18 @@ stream::stream()
       _events_received_since_last_ack(0) {}
 
 /**
- *  Destructor.
+ * @brief All the mecanism behind this stream is stopped once this method is
+ * called. The last thing done is to return how many events are acknowledged.
+ *
+ * @return The number of events to acknowledge.
  */
-stream::~stream() noexcept {}
+int32_t stream::stop() {
+  _substream->stop();
+  int retval = _acknowledged_events;
+  _acknowledged_events = 0;
+  io::stream::stop();
+  return retval;
+}
 
 /**
  *  Flush stream data.
