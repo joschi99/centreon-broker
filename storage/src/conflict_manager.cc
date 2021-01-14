@@ -99,8 +99,29 @@ conflict_manager::conflict_manager(database_config const& dbcfg,
   log_v2::sql()->debug("conflict_manager: class instanciation");
 }
 
+/**
+ * @brief The conflict_manager destructor.
+ */
 conflict_manager::~conflict_manager() {
   log_v2::sql()->debug("conflict_manager: destruction");
+  if (!_perfdata_queue.empty())
+    log_v2::sql()->error("conflict_manager: {} elements in the perfdata queue",
+          _perfdata_queue.size());
+  if (!_metrics.empty())
+    log_v2::sql()->error("conflict_manager: {} elements in the metrics queue",
+          _metrics.size());
+  if (!_cv_queue.empty())
+    log_v2::sql()->error("conflict_manager: {} elements in the customvariables queue",
+          _cv_queue.size());
+  if (!_log_queue.empty())
+  log_v2::sql()->error("conflict_manager: {} elements in the logs queue",
+        _log_queue.size());
+  int32_t acks = get_acks(sql);
+  if (acks != 0)
+    log_v2::sql()->error("conflict_manager: {} acknowledged elements not acknowledged in the sql stream", acks);
+  acks = get_acks(storage);
+  if (acks != 0)
+    log_v2::sql()->error("conflict_manager: {} acknowledged elements not acknowledged in the storage stream", acks);
 }
 
 /**
@@ -572,6 +593,12 @@ void conflict_manager::_callback() {
           _events_handled = events.size();
         }
       }
+
+      /* It is time to clean bulk cache before closing the conflict manager. */
+      _insert_perfdatas();
+      _update_metrics();
+      _update_customvariables();
+      _insert_logs();
     } catch (std::exception const& e) {
       logging::error(logging::high)
           << "conflict_manager: error in the main loop: " << e.what();
@@ -748,7 +775,7 @@ int32_t conflict_manager::unload(stream_type type) {
     int retval;
     if (count == 0) {
       __exit();
-      retval = _fifo.get_acks(type);
+      retval = get_acks(type);
       {
         std::lock_guard<std::mutex> lck(_init_m);
         _state = finished;

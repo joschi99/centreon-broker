@@ -33,11 +33,13 @@ stream::stream(const std::string& name) : _name(name) {}
 /**
  * @brief This method provides a mecanism to stop threads behind the stream and
  * to flush pending events. It returns the number of acknowledged events.
+ * It acts as flush() but after a call to stop(), we are sure no more events
+ * will have to be acknowledged. So we don't lose any.
  *
  * @return the number of acknowledged events.
  */
 int32_t stream::stop() {
-  return 0;
+  return flush();
 }
 
 /**

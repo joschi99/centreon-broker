@@ -251,7 +251,7 @@ void failover::_run() {
         d.reset();
         bool timed_out_stream(true);
         if (stream_can_read) {
-          log_v2::processing()->debug(
+          log_v2::processing()->trace(
               "failover: reading event from endpoint '{}'", _name);
           _update_status("reading event from stream");
           try {
@@ -264,7 +264,7 @@ void failover::_run() {
             stream_can_read = false;
           }
           if (d) {
-            log_v2::processing()->debug(
+            log_v2::processing()->trace(
                 "failover: writing event of endpoint '{}' to multiplexing "
                 "engine",
                 _name);
@@ -281,7 +281,7 @@ void failover::_run() {
         d.reset();
         bool timed_out_muxer(true);
         if (muxer_can_read) {
-          log_v2::processing()->debug(
+          log_v2::processing()->trace(
               "failover: reading event from "
               "multiplexing engine for endpoint '{}'",
               _name);
@@ -297,7 +297,7 @@ void failover::_run() {
             muxer_can_read = false;
           }
           if (d) {
-            log_v2::processing()->debug(
+            log_v2::processing()->trace(
                 "failover: writing event of multiplexing engine to endpoint "
                 "'{}'",
                 _name);
@@ -362,6 +362,8 @@ void failover::_run() {
       {
         if (_stream) {
           int32_t ack_events = _stream->stop();
+          log_v2::processing()->debug("stream {} stopped on error with {} ack events sent to muxer",
+              _name, ack_events);
           _subscriber->get_muxer().ack_events(ack_events);
           std::lock_guard<std::timed_mutex> stream_lock(_stream_m);
           _stream.reset();
@@ -380,6 +382,8 @@ void failover::_run() {
              "developers";
       {
         int32_t ack_events = _stream->stop();
+          log_v2::processing()->debug("stream {} stopped on unknown event with {} ack events sent to muxer",
+              _name, ack_events);
         _subscriber->get_muxer().ack_events(ack_events);
         std::lock_guard<std::timed_mutex> stream_lock(_stream_m);
         _stream.reset();
@@ -397,8 +401,9 @@ void failover::_run() {
 
       if (_stream) {
         // If ack_events is not zero, then we will store data twice
-        int32_t ack_events = _stream->flush();
-        assert(ack_events == 0);
+        int32_t ack_events = _stream->stop();
+        log_v2::processing()->debug("stream {} trace correctly with {} ack events sent to muxer",
+            _name, ack_events);
         _subscriber->get_muxer().ack_events(ack_events);
         _stream.reset();
       }
@@ -419,7 +424,17 @@ void failover::_run() {
   // Clear stream.
   {
     std::lock_guard<std::timed_mutex> stream_lock(_stream_m);
-    _stream.reset();
+    // If ack_events is not zero, then we will store data twice
+    if (_stream) {
+      int32_t ack_events = _stream->stop();
+      std::string msg{fmt::format("stream {} stopped with {} lost ack events: they will be sent again",
+                    _name, ack_events)};
+      if (ack_events > 0)
+        log_v2::processing()->error(msg);
+      else
+        log_v2::processing()->debug(msg);
+      _stream.reset();
+    }
     set_state("connecting");
   }
 

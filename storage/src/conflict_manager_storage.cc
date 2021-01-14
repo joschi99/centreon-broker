@@ -416,6 +416,11 @@ void conflict_manager::_storage_process_service_status(
   *std::get<2>(t) = true;
 }
 
+/**
+ * @brief Insert metrics in the metrics table. If broker is closed and the
+ * _metrics list contains data, the won't be inserted into the table and they
+ * will be lost. Is is our responsability to store them before cbd to be closed.
+ */
 void conflict_manager::_update_metrics() {
   if (_metrics.empty())
     return;
@@ -458,7 +463,10 @@ void conflict_manager::_update_metrics() {
 }
 
 /**
- *  Insert performance data entries in the data_bin table.
+ *  Insert performance data entries in the data_bin table. If broker is closed
+ *  and the perfdata queue contains data, they won't be inserted into the
+ *  data_bin table. It is our responsability to store them before cbd to be
+ *  stopped.
  */
 void conflict_manager::_insert_perfdatas() {
   if (!_perfdata_queue.empty()) {

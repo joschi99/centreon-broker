@@ -19,12 +19,10 @@
 
 #include <algorithm>
 #include <cmath>
-#include <sstream>
 
 #include "com/centreon/broker/exceptions/shutdown.hh"
 #include "com/centreon/broker/io/events.hh"
 #include "com/centreon/broker/log_v2.hh"
-#include "com/centreon/broker/logging/logging.hh"
 #include "com/centreon/broker/lua/luabinding.hh"
 #include "com/centreon/broker/misc/math.hh"
 
@@ -169,12 +167,25 @@ stream::stream(std::string const& lua_script,
 }
 
 /**
- *  Destructor.
+ * @brief A stream should be stopped before being destroyed. Otherwise, not
+ * acknowledged events could be handled twice.
+ *
+ * @return The number of acknowledged events.
  */
-stream::~stream() {
+int32_t stream::stop() {
   _exit = true;
   if (_thread.joinable())
     _thread.join();
+  int retval = _acks_count;
+  _acks_count -= retval;
+  return retval;
+}
+
+/**
+ *  Destructor.
+ */
+stream::~stream() {
+  assert(_exit);
 }
 
 /**

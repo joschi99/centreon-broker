@@ -99,6 +99,14 @@ class mfifo {
     return retval;
   }
 
+  /**
+   * @brief Gets the number of acknowledged events from the source idx. And
+   * reset in mfifo this value to 0.
+   *
+   * @param idx The source index.
+   *
+   * @return An integer.
+   */
   int32_t get_acks(uint32_t idx) {
     std::lock_guard<std::mutex> lk(_fifo_m);
     int32_t retval = _ack[idx];

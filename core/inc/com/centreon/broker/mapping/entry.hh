@@ -233,15 +233,21 @@ class entry {
    *
    *  @param[in] other  Object to copy.
    */
-  entry(entry const& other)
-      : _attribute(other._attribute),
-        _name_v2(other._name_v2),
-        _ptr(other._ptr),
-        _serialize(other._serialize),
-        _source(other._source),
-        _type(other._type) {}
-  ~entry() noexcept = default;
-  entry& operator=(entry const&) = delete;
+  entry(const entry&) = delete;
+  entry& operator=(const entry&) = delete;
+  entry(entry&&) = default;
+  //entry(const entry& other)
+  //    : _attribute(other._attribute),
+  //      _name_v2(other._name_v2),
+  //      _ptr(other._ptr),
+  //      _serialize(other._serialize),
+  //      _source(other._source),
+  //      _type(other._type) {}
+  ~entry() noexcept {
+//    FILE* f = fopen("/tmp/entry.log", "a+");
+//    fprintf(f, "%x => %s source %x : count %d\n", this, _name_v2, _source.get(), _source.use_count());
+//    fclose(f);
+  }
   uint32_t get_attribute() const { return _attribute; }
   bool get_bool(io::data const& d) const;
   double get_double(io::data const& d) const;
