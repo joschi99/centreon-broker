@@ -36,10 +36,10 @@ namespace mapping {
 class entry {
   const uint32_t _attribute;
   char const* _name_v2;
-  source* _ptr;
   const bool _serialize;
-  std::shared_ptr<source> _source;
   const source::source_type _type;
+  std::unique_ptr<source> _source;
+  source* _ptr;
 
  public:
   enum attribute {
@@ -67,10 +67,8 @@ class entry {
       : _attribute(attr),
         _name_v2(name),
         _serialize(serialize),
-        _type(source::STRING) {
-    _source = std::make_shared<sproperty<T>>(prop, max_len);
-    _ptr = _source.get();
-  }
+        _type(source::STRING),
+  _source{new sproperty<T>(prop, max_len)}, _ptr{_source.get()} {}
 
   /**
    *  @brief Boolean constructor.
@@ -88,10 +86,8 @@ class entry {
       : _attribute(attr),
         _name_v2(name),
         _serialize(serialize),
-        _type(source::BOOL) {
-    _source = std::make_shared<property<T>>(prop);
-    _ptr = _source.get();
-  }
+        _type(source::BOOL),
+    _source{new property<T>(prop)}, _ptr{_source.get()} {}
 
   /**
    *  @brief Double constructor.
@@ -109,10 +105,8 @@ class entry {
       : _attribute(attr),
         _name_v2(name),
         _serialize(serialize),
-        _type(source::DOUBLE) {
-    _source = std::make_shared<property<T>>(prop);
-    _ptr = _source.get();
-  }
+        _type(source::DOUBLE), _source{new property<T>(prop)},
+    _ptr{_source.get()} {}
 
   /**
    *  @brief Unsigned integer constructor.
@@ -130,10 +124,8 @@ class entry {
       : _attribute(attr),
         _name_v2(name),
         _serialize(serialize),
-        _type(source::UINT) {
-    _source = std::make_shared<property<T>>(prop);
-    _ptr = _source.get();
-  }
+        _type(source::UINT),
+    _source{new property<T>(prop)}, _ptr{_source.get()} {}
 
   /**
    *  @brief Integer constructor.
@@ -151,9 +143,9 @@ class entry {
       : _attribute(attr),
         _name_v2(name),
         _serialize(serialize),
-        _type(source::INT) {
-    _source = std::make_shared<property<T>>(prop);
-    _ptr = _source.get();
+        _type(source::INT),
+    _source{new property<T>(prop)},
+    _ptr{_source.get()} {
   }
 
   /**
@@ -172,9 +164,9 @@ class entry {
       : _attribute(attr),
         _name_v2(name),
         _serialize(serialize),
-        _type(source::USHORT) {
-    _source = std::make_shared<property<T>>(prop);
-    _ptr = _source.get();
+        _type(source::USHORT),
+    _source{new property<T>(prop)},
+    _ptr{_source.get()} {
   }
 
   /**
@@ -193,9 +185,9 @@ class entry {
       : _attribute(attr),
         _name_v2(name),
         _serialize(serialize),
-        _type(source::SHORT) {
-    _source = std::make_shared<property<T>>(prop);
-    _ptr = _source.get();
+        _type(source::SHORT),
+    _source{new property<T>(prop)},
+    _ptr{_source.get()} {
   }
 
   /**
@@ -213,9 +205,9 @@ class entry {
       : _attribute(attr),
         _name_v2(name),
         _serialize(serialize),
-        _type(source::TIME) {
-    _source = std::make_shared<property<T>>(prop);
-    _ptr = _source.get();
+        _type(source::TIME),
+    _source{new property<T>(prop)},
+    _ptr{_source.get()} {
   }
 
   /**
@@ -224,9 +216,9 @@ class entry {
   entry()
       : _attribute(always_valid),
         _name_v2(nullptr),
-        _ptr(nullptr),
         _serialize(false),
-        _type(source::UNKNOWN) {}
+        _type(source::UNKNOWN),
+        _ptr(nullptr) {}
 
   /**
    *  Copy constructor.
