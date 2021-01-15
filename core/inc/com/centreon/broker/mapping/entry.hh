@@ -68,7 +68,8 @@ class entry {
         _name_v2(name),
         _serialize(serialize),
         _type(source::STRING),
-  _source{new sproperty<T>(prop, max_len)}, _ptr{_source.get()} {}
+        _source{new sproperty<T>(prop, max_len)},
+        _ptr{_source.get()} {}
 
   /**
    *  @brief Boolean constructor.
@@ -87,7 +88,8 @@ class entry {
         _name_v2(name),
         _serialize(serialize),
         _type(source::BOOL),
-    _source{new property<T>(prop)}, _ptr{_source.get()} {}
+        _source{new property<T>(prop)},
+        _ptr{_source.get()} {}
 
   /**
    *  @brief Double constructor.
@@ -105,8 +107,9 @@ class entry {
       : _attribute(attr),
         _name_v2(name),
         _serialize(serialize),
-        _type(source::DOUBLE), _source{new property<T>(prop)},
-    _ptr{_source.get()} {}
+        _type(source::DOUBLE),
+        _source{new property<T>(prop)},
+        _ptr{_source.get()} {}
 
   /**
    *  @brief Unsigned integer constructor.
@@ -125,7 +128,8 @@ class entry {
         _name_v2(name),
         _serialize(serialize),
         _type(source::UINT),
-    _source{new property<T>(prop)}, _ptr{_source.get()} {}
+        _source{new property<T>(prop)},
+        _ptr{_source.get()} {}
 
   /**
    *  @brief Integer constructor.
@@ -144,9 +148,8 @@ class entry {
         _name_v2(name),
         _serialize(serialize),
         _type(source::INT),
-    _source{new property<T>(prop)},
-    _ptr{_source.get()} {
-  }
+        _source{new property<T>(prop)},
+        _ptr{_source.get()} {}
 
   /**
    *  @brief Unsigned short constructor.
@@ -165,9 +168,8 @@ class entry {
         _name_v2(name),
         _serialize(serialize),
         _type(source::USHORT),
-    _source{new property<T>(prop)},
-    _ptr{_source.get()} {
-  }
+        _source{new property<T>(prop)},
+        _ptr{_source.get()} {}
 
   /**
    *  @brief Short constructor.
@@ -186,9 +188,8 @@ class entry {
         _name_v2(name),
         _serialize(serialize),
         _type(source::SHORT),
-    _source{new property<T>(prop)},
-    _ptr{_source.get()} {
-  }
+        _source{new property<T>(prop)},
+        _ptr{_source.get()} {}
 
   /**
    *  @brief Time constructor.
@@ -206,9 +207,8 @@ class entry {
         _name_v2(name),
         _serialize(serialize),
         _type(source::TIME),
-    _source{new property<T>(prop)},
-    _ptr{_source.get()} {
-  }
+        _source{new property<T>(prop)},
+        _ptr{_source.get()} {}
 
   /**
    *  Default constructor.
@@ -228,7 +228,7 @@ class entry {
   entry(const entry&) = delete;
   entry& operator=(const entry&) = delete;
   entry(entry&&) = default;
-  //entry(const entry& other)
+  // entry(const entry& other)
   //    : _attribute(other._attribute),
   //      _name_v2(other._name_v2),
   //      _ptr(other._ptr),
@@ -236,9 +236,9 @@ class entry {
   //      _source(other._source),
   //      _type(other._type) {}
   ~entry() noexcept {
-//    FILE* f = fopen("/tmp/entry.log", "a+");
-//    fprintf(f, "%x => %s source %x : count %d\n", this, _name_v2, _source.get(), _source.use_count());
-//    fclose(f);
+    //    FILE* f = fopen("/tmp/entry.log", "a+");
+    //    fprintf(f, "%x => %s source %x : count %d\n", this, _name_v2,
+    //    _source.get(), _source.use_count()); fclose(f);
   }
   uint32_t get_attribute() const { return _attribute; }
   bool get_bool(io::data const& d) const;
