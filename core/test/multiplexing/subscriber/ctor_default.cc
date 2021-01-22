@@ -36,7 +36,7 @@ class SubscriberTest : public ::testing::Test {
  public:
   void SetUp() override {
     // Initialization.
-    config::applier::init();
+    config::applier::init(0, "test_broker");
     multiplexing::engine::instance().start();
   }
 
@@ -69,7 +69,8 @@ TEST_F(SubscriberTest, DefaultConstructor) {
   ASSERT_TRUE(event);
   ASSERT_EQ(event->type(), io::raw::static_type());
   ASSERT_TRUE(strncmp(std::static_pointer_cast<io::raw>(event)->const_data(),
-                      MSG.c_str(), MSG.size()) == 0);
+                      MSG.c_str(),
+                      MSG.size()) == 0);
 
   // Try reading again.
   s.get_muxer().read(event, 0);

@@ -40,7 +40,7 @@ const std::string MSG4("no this is the last message");
 
 class Hook : public testing::Test {
  public:
-  void SetUp() override { config::applier::init(); }
+  void SetUp() override { config::applier::init(0, "test_broker"); }
 
   void TearDown() override { config::applier::deinit(); }
 };
@@ -133,9 +133,11 @@ TEST_F(Hook, EngineWorks) {
 
     // Success.
     error = false;
-  } catch (std::exception const& e) {
+  }
+  catch (std::exception const& e) {
     std::cerr << e.what() << "\n";
-  } catch (...) {
+  }
+  catch (...) {
     std::cerr << "unknown exception\n";
   }
 

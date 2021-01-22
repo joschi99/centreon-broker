@@ -27,6 +27,7 @@
 #include "com/centreon/broker/multiplexing/hooker.hh"
 #include "com/centreon/broker/namespace.hh"
 #include "com/centreon/broker/persistent_cache.hh"
+#include "com/centreon/broker/stats/center.hh"
 
 CCB_BEGIN()
 
@@ -71,12 +72,12 @@ class engine {
   std::unique_ptr<persistent_cache> _cache_file;
 
   // Data queue.
-  std::queue<std::shared_ptr<io::data>> _kiew;
+  std::queue<std::shared_ptr<io::data> > _kiew;
 
   // Hooks
-  std::vector<std::pair<hooker*, bool>> _hooks;
-  std::vector<std::pair<hooker*, bool>>::iterator _hooks_begin;
-  std::vector<std::pair<hooker*, bool>>::iterator _hooks_end;
+  std::vector<std::pair<hooker*, bool> > _hooks;
+  std::vector<std::pair<hooker*, bool> >::iterator _hooks_begin;
+  std::vector<std::pair<hooker*, bool> >::iterator _hooks_end;
 
   // Mutex to lock _kiew and _hooks
   std::mutex _engine_m;
@@ -84,6 +85,10 @@ class engine {
   // Subscriber.
   std::vector<muxer*> _muxers;
   std::mutex _muxers_m;
+
+  // Statistics.
+  EngineStats* _stats;
+  uint32_t _unprocessed_events;
 
   static std::mutex _load_m;
 
@@ -107,7 +112,7 @@ class engine {
   ~engine() noexcept = default;
   void clear();
   void publish(const std::shared_ptr<io::data>& d);
-  void publish(const std::list<std::shared_ptr<io::data>>& to_publish);
+  void publish(const std::list<std::shared_ptr<io::data> >& to_publish);
   void start();
   void stop();
   void hook(hooker& h, bool with_data = true);

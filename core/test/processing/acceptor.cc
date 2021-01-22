@@ -32,8 +32,9 @@ class ProcessingTest : public ::testing::Test {
  public:
   void SetUp() override {
     try {
-      config::applier::init();
-    } catch (std::exception const& e) {
+      config::applier::init(0, "test_broker");
+    }
+    catch (std::exception const& e) {
       (void)e;
     }
 
@@ -51,9 +52,7 @@ class ProcessingTest : public ::testing::Test {
   std::unique_ptr<acceptor> _acceptor;
 };
 
-TEST_F(ProcessingTest, NotStarted) {
-  ASSERT_NO_THROW(_acceptor->exit());
-}
+TEST_F(ProcessingTest, NotStarted) { ASSERT_NO_THROW(_acceptor->exit()); }
 
 TEST_F(ProcessingTest, StartStop1) {
   _acceptor->start();

@@ -26,16 +26,17 @@
 #include <fstream>
 #include <json11.hpp>
 
-#include "com/centreon/broker/logging/logging.hh"
-
 using namespace com::centreon::broker;
 using namespace spdlog;
 using namespace json11;
 
 static std::map<std::string, level::level_enum> dbg_lvls{
-    {"trace", level::trace}, {"debug", level::debug},
-    {"info", level::info},   {"warn", level::warn},
-    {"err", level::err},     {"critical", level::critical},
+    {"trace", level::trace},
+    {"debug", level::debug},
+    {"info", level::info},
+    {"warn", level::warn},
+    {"err", level::err},
+    {"critical", level::critical},
     {"off", level::off}};
 
 log_v2& log_v2::instance() {
@@ -59,11 +60,11 @@ log_v2::log_v2() {
 
 log_v2::~log_v2() {
   _core_log->info("log finished");
-  _tls_log->flush();
-  _bbdo_log->flush();
-  _tcp_log->flush();
   _core_log->flush();
   _config_log->flush();
+  _tcp_log->flush();
+  _bbdo_log->flush();
+  _tls_log->flush();
   _sql_log->flush();
   _perfdata_log->flush();
   _lua_log->flush();
@@ -71,7 +72,7 @@ log_v2::~log_v2() {
   _bam_log->flush();
 }
 
-static auto json_validate = [](Json const& js) -> bool {
+static auto json_validate = [](Json const & js) -> bool {
   if (!js.is_object() || !js["console"].is_bool() || !js["loggers"].is_array())
     return false;
 
@@ -90,10 +91,8 @@ static auto json_validate = [](Json const& js) -> bool {
 };
 
 bool log_v2::load(const char* file,
-                  std::string const& broker_name,
+                  const std::string& broker_name,
                   std::string& err) {
-  std::lock_guard<std::mutex> lock(_load_m);
-
   std::ifstream my_file(file);
   if (my_file.good()) {
     std::string const& json_to_parse{std::istreambuf_iterator<char>(my_file),
@@ -152,54 +151,41 @@ bool log_v2::load(const char* file,
         else
           continue;
 
-        *l = std::make_shared<logger>(entry["name"].string_value(),
-                                      sinks.begin(), sinks.end());
+        *l = std::make_shared<logger>(
+            entry["name"].string_value(), sinks.begin(), sinks.end());
         (*l)->set_level(dbg_lvls[entry["level"].string_value()]);
         (*l)->flush_on(dbg_lvls[entry["level"].string_value()]);
       }
-
-      return true;
+    } else {
+      err = fmt::format("bad format for config file '{}'", file);
+      return false;
     }
-
-    err = fmt::format("bad format for config file '{}'", file);
+  } else {
+    err = fmt::format("file '{}' does not exist", file);
     return false;
   }
-
-  err = fmt::format("file '{}' does not exist", file);
-  return false;
+  return true;
 }
 
-std::shared_ptr<spdlog::logger> log_v2::core() {
-  return instance()._core_log;
-}
+std::shared_ptr<spdlog::logger> log_v2::core() { return instance()._core_log; }
 
 std::shared_ptr<spdlog::logger> log_v2::config() {
   return instance()._config_log;
 }
 
-std::shared_ptr<spdlog::logger> log_v2::tls() {
-  return instance()._tls_log;
-}
+std::shared_ptr<spdlog::logger> log_v2::tls() { return instance()._tls_log; }
 
-std::shared_ptr<spdlog::logger> log_v2::bbdo() {
-  return instance()._bbdo_log;
-}
+std::shared_ptr<spdlog::logger> log_v2::bbdo() { return instance()._bbdo_log; }
 
-std::shared_ptr<spdlog::logger> log_v2::tcp() {
-  return instance()._tcp_log;
-}
+std::shared_ptr<spdlog::logger> log_v2::tcp() { return instance()._tcp_log; }
 
-std::shared_ptr<spdlog::logger> log_v2::sql() {
-  return instance()._sql_log;
-}
+std::shared_ptr<spdlog::logger> log_v2::sql() { return instance()._sql_log; }
 
 std::shared_ptr<spdlog::logger> log_v2::perfdata() {
   return instance()._perfdata_log;
 }
 
-std::shared_ptr<spdlog::logger> log_v2::lua() {
-  return instance()._lua_log;
-}
+std::shared_ptr<spdlog::logger> log_v2::lua() { return instance()._lua_log; }
 
 std::shared_ptr<spdlog::logger> log_v2::processing() {
   return instance()._processing_log;

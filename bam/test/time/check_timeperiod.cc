@@ -76,7 +76,7 @@ static void parse_file(char const* filename, options& opt) {
     throw msg_fmt("null file name");
   std::ifstream stream(filename);
   if (!stream.is_open())
-    throw msg_fmt("could not open file '{}'", filename); 
+    throw msg_fmt("could not open file '{}'", filename);
   std::vector<std::string> range;
   std::vector<std::string> exclude;
   std::shared_ptr<time::timeperiod> current_tp(new time::timeperiod);
@@ -88,8 +88,11 @@ static void parse_file(char const* filename, options& opt) {
       continue;
     size_t pos(line.find_first_of('='));
     if (pos == std::string::npos)
-      throw msg_fmt("parsing of file '{}'" 
-                    " failed because of line: {}", filename, line);
+      throw msg_fmt(
+          "parsing of file '{}'"
+          " failed because of line: {}",
+          filename,
+          line);
     std::string key(line.substr(0, pos));
     std::string value(line.substr(pos + 1));
     if (key == "preferred_time")
@@ -112,8 +115,7 @@ static void parse_file(char const* filename, options& opt) {
     } else if (key == "speday") {
       size_t pos(value.find_first_of(" \t\n"));
       if (pos == std::string::npos)
-        throw msg_fmt(
-            "invalid timeperiod exception format: {}", value);
+        throw msg_fmt("invalid timeperiod exception format: {}", value);
       std::string v{value.substr(pos)};
       misc::string::trim(v);
       current_tp->add_exception(value.substr(0, pos), v);
@@ -134,24 +136,24 @@ static void parse_file(char const* filename, options& opt) {
       opt.period.push_back(current_tp);
       current_tp = std::shared_ptr<time::timeperiod>(new time::timeperiod);
     } else
-      throw msg_fmt("parsing of file '{}'" 
-                    " failed because of line: {}", filename, line);
+      throw msg_fmt(
+          "parsing of file '{}'"
+          " failed because of line: {}",
+          filename,
+          line);
   }
   if (!opt.preferred_time || !opt.current_time || !opt.ref_time ||
       !opt.period.size())
-    throw msg_fmt("invalid configuration file: "
-                  "not all required parameters are set");
+    throw msg_fmt(
+        "invalid configuration file: "
+        "not all required parameters are set");
 }
 
 class BamTime : public ::testing::Test {
  public:
-  void SetUp() override {
-    config::applier::init();
-  }
+  void SetUp() override { config::applier::init(0, "test_broker"); }
 
-  void TearDown() override {
-    config::applier::deinit();
-  }
+  void TearDown() override { config::applier::deinit(); }
 };
 
 bool checkPeriod(char const* file) {
@@ -172,15 +174,19 @@ bool checkPeriod(char const* file) {
       std::string valid_str(ctime(&valid));
       misc::string::trim(valid_str);
       throw msg_fmt(
-          "next valid time of timeperiod is {}" 
-          " but does not match reference time {}", valid_str, ref_str);
+          "next valid time of timeperiod is {}"
+          " but does not match reference time {}",
+          valid_str,
+          ref_str);
     }
 
     // Success.
     return true;
-  } catch (std::exception const& e) {
+  }
+  catch (std::exception const& e) {
     std::cout << e.what() << std::endl;
-  } catch (...) {
+  }
+  catch (...) {
     std::cout << "unknown exception" << std::endl;
   }
   return false;

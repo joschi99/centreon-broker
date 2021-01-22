@@ -95,9 +95,9 @@ int32_t stream::stop() {
  *  Destructor.
  */
 stream::~stream() {
+  assert(_stopped);
   // Stop cleanup thread.
   log_v2::sql()->trace("storage: stream destruction");
-  conflict_manager::instance().unload(conflict_manager::storage);
 }
 
 /**

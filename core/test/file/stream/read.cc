@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
   QCoreApplication app(argc, argv);
 
   // Initialization.
-  config::applier::init();
+  config::applier::init(0, "test_broker");
 
   // Generate file name.
   QString filename(QDir::tempPath());
@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
     // Read data.
     if (raw.isNull()) {
       std::shared_ptr<io::data> d;
-      fs.read(d, (time_t)-1);
+      fs.read(d, (time_t) - 1);
       if (d.isNull() || (io::raw::static_type() != d->type()))
         retval |= 1;
       else {
@@ -109,8 +109,8 @@ int main(int argc, char* argv[]) {
     if (!retval) {
       // Compare data.
       uint32_t cb(((raw->size() - rawc) < (sizeof(buffer) - 1 - bufferc))
-                          ? (raw->size() - rawc)
-                          : (sizeof(buffer) - 1 - bufferc));
+                      ? (raw->size() - rawc)
+                      : (sizeof(buffer) - 1 - bufferc));
       retval |= memcmp(raw->QByteArray::data() + rawc, buffer + bufferc, cb);
 
       // Adjust buffers.
@@ -127,9 +127,10 @@ int main(int argc, char* argv[]) {
   // EOF must be reached.
   try {
     std::shared_ptr<io::data> d;
-    fs.read(d, (time_t)-1);
+    fs.read(d, (time_t) - 1);
     retval |= 1;
-  } catch (io::exceptions::shutdown const& s) {
+  }
+  catch (io::exceptions::shutdown const& s) {
     (void)s;
   }
 

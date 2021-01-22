@@ -198,8 +198,10 @@ TEST(StoragePerfdata, DefaultCtor) {
 
 class StorageParserParsePerfdata : public testing::Test {
  public:
-  void SetUp() override { config::applier::init(); }
-  void TearDown() override { config::applier::deinit(); };
+  void SetUp() override { config::applier::init(0, "test_broker"); }
+  void TearDown() override {
+    config::applier::deinit();
+  };
 };
 
 // Given a storage::parser object

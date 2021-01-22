@@ -68,32 +68,39 @@ void state::apply(com::centreon::broker::config::state const& s, bool run_mux) {
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -_.");
   if (!s.poller_id() || s.poller_name().empty())
     throw msg_fmt(
-          "state applier: poller information are "
-          "not set: please fill poller_id and poller_name");
+        "state applier: poller information are "
+        "not set: please fill poller_id and poller_name");
   if (!s.broker_id() || s.broker_name().empty())
     throw msg_fmt(
-          "state applier: instance information "
-          "are not set: please fill broker_id and broker_name");
+        "state applier: instance information "
+        "are not set: please fill broker_id and broker_name");
   for (std::string::const_iterator it(s.broker_name().begin()),
        end(s.broker_name().end());
-       it != end; ++it)
+       it != end;
+       ++it)
     if (!strchr(allowed_chars, *it))
       throw msg_fmt(
-            "state applier: broker_name is not "
-            " valid: allowed characters are {}", allowed_chars);
+          "state applier: broker_name is not "
+          " valid: allowed characters are {}",
+          allowed_chars);
   for (std::list<config::endpoint>::const_iterator it(s.endpoints().begin()),
        end(s.endpoints().end());
-       it != end; ++it) {
+       it != end;
+       ++it) {
     if (it->name.empty())
-      throw msg_fmt("state applier: endpoint name is not set: "
-                              "please fill name of all endpoints");
+      throw msg_fmt(
+          "state applier: endpoint name is not set: "
+          "please fill name of all endpoints");
     for (std::string::const_iterator it_name(it->name.begin()),
          end_name(it->name.end());
-         it_name != end_name; ++it_name)
+         it_name != end_name;
+         ++it_name)
       if (!strchr(allowed_chars, *it_name))
         throw msg_fmt(
-             "state applier: endpoint name '{}'"
-              "' is not valid: allowed characters are '{}'", *it_name, allowed_chars);
+            "state applier: endpoint name '{}'"
+            "' is not valid: allowed characters are '{}'",
+            *it_name,
+            allowed_chars);
   }
 
   // Set Broker instance ID.
@@ -136,11 +143,12 @@ void state::apply(com::centreon::broker::config::state const& s, bool run_mux) {
     uint32_t module_count(0);
     for (modules::iterator it(modules::instance().begin()),
          end(modules::instance().end());
-         it != end; ++it)
+         it != end;
+         ++it)
       ++module_count;
     if (module_count)
-      logging::config(logging::high)
-          << "applier: " << module_count << " modules loaded";
+      logging::config(logging::high) << "applier: " << module_count
+                                     << " modules loaded";
     else
       logging::config(logging::high)
           << "applier: no module loaded, "
@@ -174,9 +182,7 @@ void state::apply(com::centreon::broker::config::state const& s, bool run_mux) {
  *
  *  @return Cache directory.
  */
-std::string const& state::cache_dir() const throw() {
-  return _cache_dir;
-}
+std::string const& state::cache_dir() const noexcept { return _cache_dir; }
 
 /**
  *  Get the instance of this object.
@@ -201,18 +207,14 @@ void state::load() {
  *
  *  @return Poller ID of this Broker instance.
  */
-uint32_t state::poller_id() const throw() {
-  return _poller_id;
-}
+uint32_t state::poller_id() const noexcept { return _poller_id; }
 
 /**
  *  Get the poller name.
  *
  *  @return Poller name of this Broker instance.
  */
-std::string const& state::poller_name() const noexcept {
-  return _poller_name;
-}
+std::string const& state::poller_name() const noexcept { return _poller_name; }
 
 /**
  * @brief Get the thread pool size.
@@ -220,9 +222,7 @@ std::string const& state::poller_name() const noexcept {
  * @return Number of threads in the pool or 0 which means the number of threads
  * will be computed as max(2, number of CPUs / 2).
  */
-size_t state::pool_size() const noexcept {
-  return _pool_size;
-}
+size_t state::pool_size() const noexcept { return _pool_size; }
 
 /**
  *  Unload singleton.

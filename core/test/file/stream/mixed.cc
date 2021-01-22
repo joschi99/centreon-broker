@@ -49,7 +49,7 @@ static int read_some(file::stream& f, uint32_t count) {
     int index(buffer.indexOf('\n'));
     while (-1 == index) {
       std::shared_ptr<io::data> d;
-      f.read(d, (time_t)-1);
+      f.read(d, (time_t) - 1);
       if (d->type() != io::raw::static_type())
         return (1);
       std::shared_ptr<io::raw> r(d.staticCast<io::raw>());
@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
   QCoreApplication app(argc, argv);
 
   // Initialization.
-  config::applier::init();
+  config::applier::init(0, "test_broker");
 
   // Generate file name.
   QString filename(QDir::tempPath());
@@ -133,9 +133,10 @@ int main(int argc, char* argv[]) {
   // No more data is available.
   try {
     std::shared_ptr<io::data> d;
-    fs.read(d, (time_t)-1);
+    fs.read(d, (time_t) - 1);
     retval |= 1;
-  } catch (io::exceptions::shutdown const& s) {
+  }
+  catch (io::exceptions::shutdown const& s) {
     (void)s;
   }
 

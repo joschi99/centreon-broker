@@ -32,19 +32,17 @@ using namespace com::centreon::broker::processing;
 class TestStream : public io::stream {
  public:
   TestStream() : io::stream("TestStream") {}
-  bool read(std::shared_ptr<io::data>&, time_t) {
-    return true;
-  }
+  bool read(std::shared_ptr<io::data>&, time_t) { return true; }
 
-  int write(std::shared_ptr<io::data> const&) {
-    return 1;
-  }
+  int write(std::shared_ptr<io::data> const&) { return 1; }
 };
 
 class TestFeeder : public ::testing::Test {
  public:
   void SetUp() override {
     config::applier::state::load();
+    pool::load(0);
+    stats::center::load();
     multiplexing::engine::load();
     io::events::load();
 
@@ -59,6 +57,8 @@ class TestFeeder : public ::testing::Test {
     _feeder.reset(nullptr);
     io::events::unload();
     multiplexing::engine::unload();
+    stats::center::unload();
+    pool::unload();
     config::applier::state::unload();
   }
 
@@ -66,9 +66,7 @@ class TestFeeder : public ::testing::Test {
   std::unique_ptr<feeder> _feeder;
 };
 
-TEST_F(TestFeeder, ImmediateStartExit) {
-  ASSERT_NO_THROW(_feeder.reset());
-}
+TEST_F(TestFeeder, ImmediateStartExit) { ASSERT_NO_THROW(_feeder.reset()); }
 
 TEST_F(TestFeeder, isFinished) {
   // It began

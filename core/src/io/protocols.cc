@@ -99,9 +99,9 @@ void protocols::reg(std::string const& name,
   p.osi_to = osi_to;
 
   // Register protocol in protocol list.
-  logging::info(logging::low)
-      << "protocols: registering protocol '" << name << "' (layers " << osi_from
-      << "-" << osi_to << ")";
+  logging::info(logging::low) << "protocols: registering protocol '" << name
+                              << "' (layers " << osi_from << "-" << osi_to
+                              << ")";
   _protocols[name] = p;
 }
 
@@ -119,8 +119,8 @@ void protocols::unload() {
  *  @param[in] name Protocol name.
  */
 void protocols::unreg(std::string const& name) {
-  logging::info(logging::low)
-      << "protocols: unregistering protocol '" << name << "'";
+  logging::info(logging::low) << "protocols: unregistering protocol '" << name
+                              << "'";
   _protocols.erase(name);
 }
 

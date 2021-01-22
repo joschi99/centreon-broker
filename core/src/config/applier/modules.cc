@@ -26,7 +26,7 @@
 using namespace com::centreon::broker::config::applier;
 
 // Class instance.
-static modules* gl_modules = nullptr;
+modules* modules::_instance{nullptr};
 
 /**************************************
  *                                     *
@@ -54,19 +54,19 @@ void modules::apply(std::list<std::string> const& module_list,
   // FIXME DBR: Very strange those lines of code. The hook and unhook methods
   // are already locked, why add a lock?
 
-//  // Lock multiplexing engine in case modules register hooks.
-//  std::lock_guard<std::recursive_mutex> lock(
-//      com::centreon::broker::multiplexing::engine::instance());
+  //  // Lock multiplexing engine in case modules register hooks.
+  //  std::lock_guard<std::recursive_mutex> lock(
+  //      com::centreon::broker::multiplexing::engine::instance());
 
   // Load modules.
   for (std::string const& m : module_list) {
-    logging::config(logging::high)
-        << "module applier: loading module '" << m << "'";
+    logging::config(logging::high) << "module applier: loading module '" << m
+                                   << "'";
     _loader.load_file(m, arg);
   }
   if (!module_dir.empty()) {
-    logging::config(logging::high)
-        << "module applier: loading directory '" << module_dir << "'";
+    logging::config(logging::high) << "module applier: loading directory '"
+                                   << module_dir << "'";
     _loader.load_dir(module_dir, arg);
   } else
     logging::debug(logging::high) << "module applier: no directory defined";
@@ -77,25 +77,19 @@ void modules::apply(std::list<std::string> const& module_list,
  *
  *  @return Iterator to the first module.
  */
-modules::iterator modules::begin() {
-  return _loader.begin();
-}
+modules::iterator modules::begin() { return _loader.begin(); }
 
 /**
  *  Unload modules.
  */
-void modules::discard() {
-  _loader.unload();
-}
+void modules::discard() { _loader.unload(); }
 
 /**
  *  Get last iterator of the module list.
  *
  *  @return Last iterator of the module list.
  */
-modules::iterator modules::end() {
-  return _loader.end();
-}
+modules::iterator modules::end() { return _loader.end(); }
 
 /**
  *  Get the class instance.
@@ -103,26 +97,31 @@ modules::iterator modules::end() {
  *  @return Class instance.
  */
 modules& modules::instance() {
-  assert(gl_modules);
-  return *gl_modules;
+  assert(_instance);
+  return *_instance;
 }
 
 /**
  *  Load the singleton.
  */
 void modules::load() {
-  if (!gl_modules)
-    gl_modules = new modules;
+  if (!_instance)
+    _instance = new modules;
 }
 
 /**
  *  Unload the singleton.
  */
 void modules::unload() {
-  delete gl_modules;
-  gl_modules = nullptr;
+  delete _instance;
+  _instance = nullptr;
 }
 
-std::mutex& modules::module_mutex() {
-  return _m_modules;
-}
+/**
+ * @brief Tells if modules are loaded.
+ *
+ * @return True if modules are loaded.
+ */
+bool modules::loaded() { return _instance; }
+
+std::mutex& modules::module_mutex() { return _m_modules; }

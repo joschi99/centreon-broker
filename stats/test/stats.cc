@@ -16,7 +16,6 @@
  * For more information : contact@centreon.com
  *
  */
-
 #include <gtest/gtest.h>
 #include <chrono>
 #include <com/centreon/broker/logging/manager.hh>
@@ -40,6 +39,7 @@
 #include "com/centreon/broker/multiplexing/engine.hh"
 #include "com/centreon/broker/stats/builder.hh"
 #include "com/centreon/exceptions/msg_fmt.hh"
+#include "com/centreon/broker/pool.hh"
 
 using namespace com::centreon::exceptions;
 using namespace com::centreon::broker;
@@ -47,6 +47,8 @@ using namespace com::centreon::broker;
 class StatsTest : public ::testing::Test {
  public:
   void SetUp() override {
+    pool::load(0);
+    stats::center::load();
     multiplexing::engine::load();
     config::applier::state::load();
     config::applier::modules::load();
@@ -62,6 +64,8 @@ class StatsTest : public ::testing::Test {
     io::protocols::unload();
     io::events::unload();
     multiplexing::engine::unload();
+    stats::center::unload();
+    pool::unload();
   }
 };
 
@@ -85,12 +89,12 @@ TEST_F(StatsTest, Builder) {
 
 TEST_F(StatsTest, BuilderWithModules) {
   stats::builder build;
-  config::applier::modules::instance().apply(std::list<std::string>{},
-                                             "./storage/", nullptr);
-  config::applier::modules::instance().apply(std::list<std::string>{}, "./neb/",
-                                             nullptr);
-  config::applier::modules::instance().apply(std::list<std::string>{}, "./lua/",
-                                             nullptr);
+  config::applier::modules::instance().apply(
+      std::list<std::string>{}, "./storage/", nullptr);
+  config::applier::modules::instance().apply(
+      std::list<std::string>{}, "./neb/", nullptr);
+  config::applier::modules::instance().apply(
+      std::list<std::string>{}, "./lua/", nullptr);
 
   build.build();
 

@@ -121,8 +121,7 @@ std::shared_ptr<logging::backend> logger::_new_backend(
   switch (cfg.type()) {
     case config::logger::file: {
       if (cfg.name().empty())
-        throw msg_fmt(
-            "log applier: attempt to log on an empty file");
+        throw msg_fmt("log applier: attempt to log on an empty file");
       std::unique_ptr<logging::file> file(
           new logging::file(cfg.name(), cfg.max_size()));
       back.reset(file.get());
@@ -146,15 +145,17 @@ std::shared_ptr<logging::backend> logger::_new_backend(
       else if (cfg.name() == "stdout" || cfg.name() == "cout")
         back.reset(new logging::file(std::cout, "cout"));
       else
-        throw msg_fmt("log applier: attempt to log on "
-                      "an undefined output object");
+        throw msg_fmt(
+            "log applier: attempt to log on "
+            "an undefined output object");
     } break;
     case config::logger::syslog:
       back.reset(new logging::syslogger(cfg.facility()));
       break;
     default:
-      throw msg_fmt("log applier: attempt to create a "
-                    "logging object of unknown type");
+      throw msg_fmt(
+          "log applier: attempt to create a "
+          "logging object of unknown type");
   }
   return back;
 }

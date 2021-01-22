@@ -26,13 +26,9 @@ using namespace com::centreon::broker;
 
 class PublisherRead : public testing::Test {
  public:
-  void SetUp() override {
-    config::applier::init();
-  }
+  void SetUp() override { config::applier::init(0, "test_broker"); }
 
-  void TearDown() override {
-    config::applier::deinit();
-  }
+  void TearDown() override { config::applier::deinit(); }
 };
 
 /**
@@ -51,9 +47,11 @@ TEST_F(PublisherRead, Read) {
     std::shared_ptr<io::data> d;
     p.read(d);
     error = true;
-  } catch (std::exception const& e) {
+  }
+  catch (std::exception const& e) {
     error = false;
-  } catch (...) {
+  }
+  catch (...) {
     error = true;
   }
 

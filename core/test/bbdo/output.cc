@@ -44,7 +44,7 @@ class into_memory : public io::stream {
   ~into_memory() override {}
 
   bool read(std::shared_ptr<io::data>& d,
-            time_t deadline = (time_t)-1) override {
+            time_t deadline = (time_t) - 1) override {
     (void)deadline;
     if (_memory.empty())
       return false;
@@ -72,8 +72,9 @@ class OutputTest : public ::testing::Test {
   void SetUp() override {
     io::data::broker_id = 0;
     try {
-      config::applier::init();
-    } catch (std::exception const& e) {
+      config::applier::init(0, "broker_test");
+    }
+    catch (std::exception const& e) {
       (void)e;
     }
     std::shared_ptr<persistent_cache> pcache(

@@ -40,22 +40,19 @@ bool check_for(std::string const& module,
 
     l.load_file(module);
     return (false);
-  } catch (std::exception const& e) {
+  }
+  catch (std::exception const& e) {
     std::cout << e.what() << std::endl;
-    return (std::string{e.what()}.find(expected_error_msg) !=
+    return (std::string { e.what() }.find(expected_error_msg) !=
             std::string::npos);
   }
 }
 
 class Modules : public testing::Test {
  public:
-  void SetUp() override {
-    config::applier::init();
-  }
+  void SetUp() override { config::applier::init(0, "test_broker"); }
 
-  void TearDown() override {
-    config::applier::deinit();
-  }
+  void TearDown() override { config::applier::deinit(); }
 };
 
 /**

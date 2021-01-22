@@ -34,13 +34,13 @@ class broker_impl final : public Broker::Service {
                                const GenericString* /*request*/,
                                GenericResponse* response) override;
 
-  grpc::Status GetGenericStats(grpc::ServerContext* context,
-                               const ::google::protobuf::Empty* request,
-                               GenericString* response) override;
-
   grpc::Status GetSqlStats(grpc::ServerContext* context,
                            const ::google::protobuf::Empty* request,
                            GenericString* response) override;
+
+  grpc::Status GetStats(grpc::ServerContext* context,
+                        const StatsQuery* request,
+                        BrokerStats* response) override;
 
   grpc::Status GetNumModules(grpc::ServerContext* context,
                              const ::google::protobuf::Empty* /*request*/,
@@ -59,7 +59,9 @@ class broker_impl final : public Broker::Service {
                                 GenericString* response) override;
 
  public:
-  void set_broker_name(std::string const& s) { _broker_name = s; };
+  void set_broker_name(std::string const& s) {
+    _broker_name = s;
+  };
 };
 CCB_END()
 

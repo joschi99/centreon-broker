@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Centreon (https://www.centreon.com/)
+ * Copyright 2020-2021 Centreon (https://www.centreon.com/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #include "com/centreon/broker/log_v2.hh"
 #include "com/centreon/broker/stats/helper.hh"
 #include "com/centreon/broker/version.hh"
+#include "com/centreon/broker/stats/center.hh"
 
 using namespace com::centreon::broker;
 using namespace com::centreon::broker::version;
@@ -84,6 +85,7 @@ grpc::Status broker_impl::GetNumEndpoint(grpc::ServerContext* context,
 
   return grpc::Status::OK;
 }
+
 grpc::Status broker_impl::GetModulesStats(grpc::ServerContext* context,
                                           const GenericNameOrIndex* request,
                                           GenericString* response) {
@@ -142,7 +144,8 @@ grpc::Status broker_impl::GetEndpointStats(grpc::ServerContext* context,
   try {
     if (!stats::get_endpoint_stats(value))
       return grpc::Status(grpc::UNAVAILABLE, grpc::string("endpoint locked"));
-  } catch (...) {
+  }
+  catch (...) {
     return grpc::Status(grpc::ABORTED, grpc::string("endpoint throw error"));
   }
 
@@ -190,19 +193,6 @@ grpc::Status broker_impl::GetEndpointStats(grpc::ServerContext* context,
   return grpc::Status::OK;
 }
 
-grpc::Status broker_impl::GetGenericStats(
-    grpc::ServerContext* context,
-    const ::google::protobuf::Empty* request,
-    GenericString* response) {
-  json11::Json::object object;
-  stats::get_generic_stats(object);
-
-  json11::Json val;
-  val = object;
-  response->set_str_arg(std::move(val.dump()));
-  return grpc::Status::OK;
-}
-
 grpc::Status broker_impl::GetSqlStats(grpc::ServerContext* context,
                                       const ::google::protobuf::Empty* request,
                                       GenericString* response) {
@@ -212,5 +202,12 @@ grpc::Status broker_impl::GetSqlStats(grpc::ServerContext* context,
   json11::Json val;
   val = object;
   response->set_str_arg(std::move(val.dump()));
+  return grpc::Status::OK;
+}
+
+grpc::Status broker_impl::GetStats(grpc::ServerContext* context,
+                                   const StatsQuery* request,
+                                   BrokerStats* response) {
+  stats::center::instance().get_stats(request, response);
   return grpc::Status::OK;
 }

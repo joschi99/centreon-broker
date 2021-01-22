@@ -61,7 +61,8 @@ stream::stream(std::string const& host, uint16_t port, int32_t read_timeout)
   _total_tcp_count++;
   log_v2::tcp()->info(
       "{} TCP streams are configured on a thread pool of {} threads",
-      _total_tcp_count, pool::instance().get_current_size());
+      _total_tcp_count,
+      pool::instance().get_pool_size());
 }
 
 /**
@@ -81,7 +82,8 @@ stream::stream(tcp_connection::pointer conn, int32_t read_timeout)
   _total_tcp_count++;
   log_v2::tcp()->info(
       "{} TCP streams are configured on a thread pool of {} threads",
-      _total_tcp_count, pool::instance().get_current_size());
+      _total_tcp_count,
+      pool::instance().get_pool_size());
 }
 
 /**
@@ -92,7 +94,8 @@ stream::~stream() noexcept {
   log_v2::tcp()->info(
       "TCP stream destroyed. Still {} configured on a thread pool of {} "
       "threads",
-      _total_tcp_count, pool::instance().get_current_size());
+      _total_tcp_count,
+      pool::instance().get_pool_size());
   log_v2::tcp()->trace("stream closed");
   if (_connection->socket().is_open())
     _connection->close();
@@ -147,13 +150,9 @@ bool stream::read(std::shared_ptr<io::data>& d, time_t deadline) {
  *
  *  @param[in,out] parent  Parent socket.
  */
-void stream::set_parent(acceptor* parent) {
-  _parent = parent;
-}
+void stream::set_parent(acceptor* parent) { _parent = parent; }
 
-int32_t stream::flush() {
-  return _connection->flush();
-}
+int32_t stream::flush() { return _connection->flush(); }
 
 /**
  *  Write data to the socket.
@@ -173,12 +172,15 @@ int32_t stream::write(std::shared_ptr<io::data> const& d) {
   if (d->type() == io::raw::static_type()) {
     std::shared_ptr<io::raw> r(std::static_pointer_cast<io::raw>(d));
     log_v2::tcp()->debug("TCP: write request of {} bytes to peer '{}:{}'",
-                         r->size(), _host, _port);
+                         r->size(),
+                         _host,
+                         _port);
     log_v2::tcp()->trace("write {} bytes", r->size());
     std::error_code err;
     try {
       return _connection->write(r->get_buffer());
-    } catch (std::exception const& e) {
+    }
+    catch (std::exception const& e) {
       log_v2::tcp()->error("Socket gone");
       throw;
     }

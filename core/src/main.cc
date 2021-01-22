@@ -37,7 +37,6 @@
 #include "com/centreon/broker/log_v2.hh"
 #include "com/centreon/broker/logging/logging.hh"
 #include "com/centreon/broker/misc/diagnostic.hh"
-#include "com/centreon/broker/pool.hh"
 
 using namespace com::centreon::broker;
 
@@ -75,8 +74,8 @@ static void hup_handler(int signum) {
     config::parser parsr;
     config::state conf{parsr.parse(gl_mainconfigfiles.front())};
     std::string err;
-    if (!log_v2::instance().load("/etc/centreon-broker/log-config.json",
-                                 conf.broker_name(), err))
+    if (!log_v2::instance().load(
+             "/etc/centreon-broker/log-config.json", conf.broker_name(), err))
       logging::error(logging::low) << err;
 
     try {
@@ -84,22 +83,26 @@ static void hup_handler(int signum) {
       config::applier::state::instance().apply(conf);
 
       gl_state = conf;
-    } catch (std::exception const& e) {
+    }
+    catch (std::exception const& e) {
       logging::error(logging::high)
           << "main: configuration update "
           << "could not succeed, reloading previous configuration: "
           << e.what();
       config::applier::state::instance().apply(gl_state);
-    } catch (...) {
+    }
+    catch (...) {
       logging::error(logging::high)
           << "main: configuration update "
           << "could not succeed, reloading previous configuration";
       config::applier::state::instance().apply(gl_state);
     }
-  } catch (std::exception const& e) {
-    logging::config(logging::high)
-        << "main: configuration update failed: " << e.what();
-  } catch (...) {
+  }
+  catch (std::exception const& e) {
+    logging::config(logging::high) << "main: configuration update failed: "
+                                   << e.what();
+  }
+  catch (...) {
     logging::config(logging::high)
         << "main: configuration update failed: unknown exception";
   }
@@ -223,16 +226,16 @@ int main(int argc, char* argv[]) {
       logging::info(logging::high) << "  -D  Generate a diagnostic file.";
       logging::info(logging::high) << "  -h  Print this help.";
       logging::info(logging::high) << "  -v  Print Centreon Broker version.";
-      logging::info(logging::high)
-          << "Centreon Broker " << CENTREON_BROKER_VERSION;
+      logging::info(logging::high) << "Centreon Broker "
+                                   << CENTREON_BROKER_VERSION;
       logging::info(logging::high) << "Copyright 2009-2018 Centreon";
       logging::info(logging::high)
           << "License ASL 2.0 "
              "<http://www.apache.org/licenses/LICENSE-2.0>";
       retval = 0;
     } else if (version) {
-      logging::info(logging::high)
-          << "Centreon Broker " << CENTREON_BROKER_VERSION;
+      logging::info(logging::high) << "Centreon Broker "
+                                   << CENTREON_BROKER_VERSION;
       retval = 0;
     } else if (gl_mainconfigfiles.empty()) {
       logging::error(logging::high)
@@ -240,8 +243,8 @@ int main(int argc, char* argv[]) {
           << " [-c] [-d] [-D] [-h] [-v] [<configfile>]\n\n";
       return 1;
     } else {
-      logging::info(logging::medium)
-          << "Centreon Broker " << CENTREON_BROKER_VERSION;
+      logging::info(logging::medium) << "Centreon Broker "
+                                     << CENTREON_BROKER_VERSION;
       logging::info(logging::medium) << "Copyright 2009-2018 Centreon";
       logging::info(logging::medium)
           << "License ASL 2.0 "
@@ -254,10 +257,10 @@ int main(int argc, char* argv[]) {
         // Parse configuration file.
         config::parser parsr;
         config::state conf{parsr.parse(gl_mainconfigfiles.front())};
-        std::string err;
-        if (!log_v2::instance().load("/etc/centreon-broker/log-config.json",
-                                     conf.broker_name(), err))
-          logging::error(logging::low) << err;
+
+        if (n_thread > 0 && n_thread < 100)
+          conf.pool_size(n_thread);
+        config::applier::init(conf);
 
         config::applier::init();
         // Verification modifications.
@@ -267,11 +270,6 @@ int main(int argc, char* argv[]) {
             l.types(0);
           conf.loggers().push_back(default_state.loggers().front());
         }
-
-        if (n_thread > 0 && n_thread < 100)
-          pool::set_size(n_thread);
-        else
-          pool::set_size(conf.pool_size());
 
         // Add debug output if in debug mode.
         if (debug)
@@ -324,6 +322,9 @@ int main(int argc, char* argv[]) {
       // Unload endpoints.
       config::applier::deinit();
     }
+
+    // Unload endpoints.
+    config::applier::deinit();
   }
   // Standard exception.
   catch (std::exception const& e) {

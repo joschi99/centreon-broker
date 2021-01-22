@@ -5,18 +5,19 @@ import "google/protobuf/empty.proto";
 package com.centreon.broker;
 
 service Broker {
-  rpc GetVersion(google.protobuf.Empty) returns (Version) {}
-  rpc DebugConfReload(GenericString) returns (GenericResponse) {}
+  rpc GetVersion(google.protobuf.Empty) returns(Version) {}
+  rpc DebugConfReload(GenericString) returns(GenericResponse) {}
 
-  //stats
-  rpc GetGenericStats(google.protobuf.Empty) returns (GenericString) {}
-  rpc GetSqlStats(google.protobuf.Empty) returns (GenericString) {}
+  // stats
+  rpc GetSqlStats(google.protobuf.Empty) returns(GenericString) {}
 
-  rpc GetNumModules(google.protobuf.Empty) returns (GenericSize) {}
-  rpc GetModulesStats(GenericNameOrIndex) returns (GenericString) {}
+  rpc GetNumModules(google.protobuf.Empty) returns(GenericSize) {}
+  rpc GetModulesStats(GenericNameOrIndex) returns(GenericString) {}
 
-  rpc GetNumEndpoint(google.protobuf.Empty) returns (GenericSize) {}
-  rpc GetEndpointStats(GenericNameOrIndex) returns (GenericString) {}
+  rpc GetNumEndpoint(google.protobuf.Empty) returns(GenericSize) {}
+  rpc GetEndpointStats(GenericNameOrIndex) returns(GenericString) {}
+
+  rpc GetStats(StatsQuery) returns(BrokerStats) {}
 }
 
 message Version {
@@ -25,25 +26,128 @@ message Version {
   int32 patch = 3;
 }
 
-message GenericString {
-  string str_arg = 1;
-}
+message GenericString { string str_arg = 1; }
 
-message GenericSize {
-  uint32 size = 1;
-}
+message GenericSize { uint32 size = 1; }
 
 // 1 => access by name
 // 2 => access by index
 // not set => all elems
 message GenericNameOrIndex {
-    oneof nameOrIndex {
-        string str = 1;
-        uint32 idx = 2;
-    }
+  oneof nameOrIndex {
+    string str = 1;
+    uint32 idx = 2;
+  }
 }
 
 message GenericResponse {
-    bool ok = 1;
-    string err_msg = 2;
+  bool ok = 1;
+  string err_msg = 2;
+}
+
+message StatsQuery {
+  enum Part {
+    ENGINE = 0;
+  }
+  repeated Part query = 1;
+}
+
+message EngineStats {
+  enum Mode {
+    NOP = 0;
+    WRITE = 1;
+    WRITE_TO_CACHE_FILE = 2;
+  }
+  Mode mode = 1;
+  uint32 unprocessed_events = 2;
+}
+
+message ConflictManagerStats {
+  uint32 loop_timeout = 1;
+  uint32 max_pending_events = 2;
+  uint32 max_perfdata_events = 3;
+  uint32 waiting_events = 4;
+  uint32 handled_events = 5;
+  string speed = 6;
+  uint32 sql = 7;
+  uint32 storage = 8;
+  string state = 9;
+}
+
+message MysqlConnectionStats { uint32 waiting_task = 1; }
+
+message MysqlManagerStats { repeated MysqlConnectionStats connections = 1; }
+
+message StreamStats {
+  string name = 1;
+  StreamStats substream = 2;
+  uint32 unacknowledged_events = 3;
+  uint32 input_ack_limit = 4;
+}
+
+message FeederStats {
+  string name = 1;
+  string read_filters = 2;
+  string write_filters = 3;
+  string state = 4;
+  uint32 queued_events = 5;
+  int64 last_connection_attempt = 6;
+  int64 last_connection_success = 7;
+  double event_processing_speed = 8;
+  int64 last_event_at = 9;
+  bool queue_file_enabled = 10;
+  uint32 unacknowledged_events = 11;
+  StreamStats stream = 12;
+  uint32 bbdo_input_ack_limit = 13;
+  uint32 bbdo_unacknowledged_events = 14;
+  string last_error = 15;
+}
+
+message EndpointStats {
+  string name = 1;
+  string read_filters = 2;
+  string write_filters = 3;
+  string state = 4;
+  uint32 queued_events = 5;
+  int64 last_connection_attempt = 6;
+  int64 last_connection_success = 7;
+  double event_processing_speed = 8;
+  int64 last_event_at = 9;
+  bool queue_file_enabled = 10;
+  uint32 unacknowledged_events = 11;
+  StreamStats stream = 12;
+  string memory_file_path = 13;
+  string status = 14;
+  bool one_peer_retention_mode = 15;
+  uint32 pending_events = 16;
+  uint32 sql_pending_events = 17;
+  string queue_file_path = 18;
+  uint32 bbdo_input_ack_limit = 19;
+  uint32 bbdo_unacknowledged_events = 20;
+  uint32 peers = 21;
+  map<string, FeederStats> feeder = 22;
+}
+
+message ModuleStats {
+  string name = 1;
+  string size = 2;
+  string state = 3;
+}
+
+message ThreadPool {
+  string latency = 1;
+  uint32 size = 2;
+}
+
+message BrokerStats {
+  string asio_version = 1;
+  string version = 2;
+  uint32 pid = 3;
+  ThreadPool pool_stats = 4;
+  int64 now = 5;
+  EngineStats engine = 6;
+  repeated EndpointStats endpoint = 7;
+  ConflictManagerStats conflict_manager = 8;
+  repeated ModuleStats modules = 9;
+  MysqlManagerStats mysql_manager = 10;
 }

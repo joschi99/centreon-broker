@@ -96,26 +96,25 @@ int nebmodule_deinit(int flags, int reason) {
  */
 int nebmodule_init(int flags, char const* args, void* handle) {
   try {
-    // Initialization.
-    com::centreon::broker::config::applier::init();
-
     // Save module handle and flags for future use.
     neb::gl_mod_flags = flags;
     neb::gl_mod_handle = handle;
 
     // Set module informations.
-    neb_set_module_info(neb::gl_mod_handle, NEBMODULE_MODINFO_TITLE,
-                        "Centreon Broker's cbmod");
-    neb_set_module_info(neb::gl_mod_handle, NEBMODULE_MODINFO_AUTHOR,
-                        "Centreon");
-    neb_set_module_info(neb::gl_mod_handle, NEBMODULE_MODINFO_COPYRIGHT,
-                        "Copyright 2009-2018 Centreon");
-    neb_set_module_info(neb::gl_mod_handle, NEBMODULE_MODINFO_VERSION,
-                        CENTREON_BROKER_VERSION);
-    neb_set_module_info(neb::gl_mod_handle, NEBMODULE_MODINFO_LICENSE,
-                        "ASL 2.0");
     neb_set_module_info(
-        neb::gl_mod_handle, NEBMODULE_MODINFO_DESC,
+        neb::gl_mod_handle, NEBMODULE_MODINFO_TITLE, "Centreon Broker's cbmod");
+    neb_set_module_info(
+        neb::gl_mod_handle, NEBMODULE_MODINFO_AUTHOR, "Centreon");
+    neb_set_module_info(neb::gl_mod_handle,
+                        NEBMODULE_MODINFO_COPYRIGHT,
+                        "Copyright 2009-2018 Centreon");
+    neb_set_module_info(
+        neb::gl_mod_handle, NEBMODULE_MODINFO_VERSION, CENTREON_BROKER_VERSION);
+    neb_set_module_info(
+        neb::gl_mod_handle, NEBMODULE_MODINFO_LICENSE, "ASL 2.0");
+    neb_set_module_info(
+        neb::gl_mod_handle,
+        NEBMODULE_MODINFO_DESC,
         "cbmod is part of Centreon Broker and is designed to "
         "convert internal Centreon Engine events to a "
         "proper data stream that can then be parsed by Centreon "
@@ -167,22 +166,27 @@ int nebmodule_init(int flags, char const* args, void* handle) {
       com::centreon::broker::config::state s{
           p.parse(neb::gl_configuration_file)};
 
+      // Initialization.
+      com::centreon::broker::config::applier::init(s);
+
       // Apply loggers.
       com::centreon::broker::config::applier::logger::instance().apply(
           s.loggers());
 
       std::string err;
-      if (!log_v2::instance().load("/etc/centreon-broker/log-config.json",
-                                   s.broker_name(), err))
+      if (!log_v2::instance().load(
+               "/etc/centreon-broker/log-config.json", s.broker_name(), err))
         logging::error(logging::low) << err;
 
       // Remove monitoring log.
       logging::manager::instance().log_on(monlog, 0);
-    } catch (std::exception const& e) {
+    }
+    catch (std::exception const& e) {
       logging::error(logging::high) << e.what();
       logging::manager::instance().log_on(monlog, 0);
       return -1;
-    } catch (...) {
+    }
+    catch (...) {
       logging::error(logging::high)
           << "main: configuration file parsing failed";
       logging::manager::instance().log_on(monlog, 0);
@@ -194,17 +198,19 @@ int nebmodule_init(int flags, char const* args, void* handle) {
 
     // Register process and log callback.
     neb::gl_registered_callbacks.push_back(std::shared_ptr<neb::callback>(
-        new neb::callback(NEBCALLBACK_PROCESS_DATA, neb::gl_mod_handle,
+        new neb::callback(NEBCALLBACK_PROCESS_DATA,
+                          neb::gl_mod_handle,
                           &neb::callback_process)));
     neb::gl_registered_callbacks.push_back(
         std::shared_ptr<neb::callback>(new neb::callback(
             NEBCALLBACK_LOG_DATA, neb::gl_mod_handle, &neb::callback_log)));
-
-  } catch (std::exception const& e) {
+  }
+  catch (std::exception const& e) {
     logging::error(logging::high) << "main: cbmod loading failed: " << e.what();
     nebmodule_deinit(0, 0);
     return -1;
-  } catch (...) {
+  }
+  catch (...) {
     logging::error(logging::high)
         << "main: cbmod loading failed due to an unknown exception";
     nebmodule_deinit(0, 0);

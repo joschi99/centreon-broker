@@ -176,7 +176,6 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(OS_DISTRIBUTOR "${CMAKE_SYSTEM_NAME}")
 endif ()
 
-
 #
 # Options.
 #
@@ -371,9 +370,7 @@ set(LIBROKER_SOURCES
   ${SRC_DIR}/bbdo/ack.cc
   ${SRC_DIR}/bbdo/connector.cc
   ${SRC_DIR}/bbdo/factory.cc
-#  ${SRC_DIR}/bbdo/input.cc
   ${SRC_DIR}/bbdo/internal.cc
-#  ${SRC_DIR}/bbdo/output.cc
   ${SRC_DIR}/bbdo/stream.cc
   ${SRC_DIR}/bbdo/version_response.cc
   ${SRC_DIR}/broker_impl.cc
@@ -454,6 +451,7 @@ set(LIBROKER_SOURCES
   ${SRC_DIR}/processing/failover.cc
   ${SRC_DIR}/processing/feeder.cc
   ${SRC_DIR}/processing/stat_visitable.cc
+  ${SRC_DIR}/stats/center.cc
   ${SRC_DIR}/stats/helper.cc
   ${SRC_DIR}/time/daterange.cc
   ${SRC_DIR}/time/timeperiod.cc
@@ -465,9 +463,7 @@ set(LIBROKER_SOURCES
   ${INC_DIR}/bbdo/ack.hh
   ${INC_DIR}/bbdo/connector.hh
   ${INC_DIR}/bbdo/factory.hh
-#  ${INC_DIR}/bbdo/input.hh
   ${INC_DIR}/bbdo/internal.hh
-#  ${INC_DIR}/bbdo/output.hh
   ${INC_DIR}/bbdo/stream.hh
   ${INC_DIR}/bbdo/version_response.hh
   ${INC_DIR}/broker_impl.hh
@@ -564,6 +560,7 @@ set(LIBROKER_SOURCES
   ${INC_DIR}/processing/acceptor.hh
   ${INC_DIR}/processing/failover.hh
   ${INC_DIR}/processing/feeder.hh
+  ${INC_DIR}/stats/center.hh
   ${INC_DIR}/processing/stat_visitable.hh
   ${INC_DIR}/stats/helper.hh
   ${INC_DIR}/time/daterange.hh
@@ -618,6 +615,7 @@ add_broker_module(GRAPHITE ON)
 add_broker_module(BAM ON)
 add_broker_module(TCP ON)
 add_broker_module(TLS ON)
+add_broker_module(DUMP OFF)
 
 # Lua module.
 option(WITH_MODULE_LUA "Build lua module." ON)

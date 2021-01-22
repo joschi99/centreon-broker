@@ -35,8 +35,6 @@ namespace applier {
  */
 class state {
   state();
-  state(state const& other);
-  state& operator=(state const& other);
 
   std::string _cache_dir;
   uint32_t _poller_id;
@@ -46,8 +44,10 @@ class state {
 
  public:
   ~state();
-  void apply(config::state const& s, bool run_mux = true);
-  std::string const& cache_dir() const noexcept;
+  state(const state&) = delete;
+  state& operator=(const state&) = delete;
+  void apply(const config::state& s, bool run_mux = true);
+  const std::string& cache_dir() const noexcept;
   static state& instance();
   static void load();
   uint32_t rpc_port() const noexcept;

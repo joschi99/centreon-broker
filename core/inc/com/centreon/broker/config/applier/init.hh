@@ -21,15 +21,21 @@
 
 #include <atomic>
 #include "com/centreon/broker/namespace.hh"
+#include "com/centreon/broker/config/state.hh"
 
 CCB_BEGIN()
 
 namespace config {
 namespace applier {
-enum applier_state { not_started, initialized, finished };
+enum applier_state {
+  not_started,
+  initialized,
+  finished
+};
 extern std::atomic<applier_state> state;
 void deinit();
-void init();
+void init(const config::state& conf);
+void init(size_t n_thread, const std::string& name);
 }  // namespace applier
 }  // namespace config
 

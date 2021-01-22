@@ -31,15 +31,15 @@ using namespace com::centreon::broker;
 using namespace com::centreon::broker::bam;
 
 class BamMonitoringStream : public testing::Test {
-  void SetUp() override { config::applier::init(); }
+  void SetUp() override { config::applier::init(0, "test_broker"); }
   void TearDown() override { config::applier::deinit(); }
 };
 
 TEST_F(BamMonitoringStream, WriteKpi) {
-  database_config cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                      "centreon");
-  database_config storage("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                          "centreon_storage");
+  database_config cfg(
+      "MySQL", "127.0.0.1", 3306, "centreon", "centreon", "centreon");
+  database_config storage(
+      "MySQL", "127.0.0.1", 3306, "centreon", "centreon", "centreon_storage");
 
   std::shared_ptr<persistent_cache> cache;
   std::unique_ptr<monitoring_stream> ms;
@@ -52,10 +52,10 @@ TEST_F(BamMonitoringStream, WriteKpi) {
 }
 
 TEST_F(BamMonitoringStream, WriteBA) {
-  database_config cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                      "centreon");
-  database_config storage("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                          "centreon_storage");
+  database_config cfg(
+      "MySQL", "127.0.0.1", 3306, "centreon", "centreon", "centreon");
+  database_config storage(
+      "MySQL", "127.0.0.1", 3306, "centreon", "centreon", "centreon_storage");
   ;
   std::shared_ptr<persistent_cache> cache;
   std::unique_ptr<monitoring_stream> ms;

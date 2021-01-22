@@ -50,8 +50,9 @@ class LuaTest : public ::testing::Test {
  public:
   void SetUp() override {
     try {
-      config::applier::init();
-    } catch (std::exception const& e) {
+      config::applier::init(0, "test_broker");
+    }
+    catch (std::exception const& e) {
       (void)e;
     }
     std::shared_ptr<persistent_cache> pcache(
@@ -172,23 +173,24 @@ TEST_F(LuaTest, SimpleScript) {
   l.load_file("./neb/10-neb.so");
 
   std::string filename("/tmp/test-lua3.lua");
-  CreateScript(filename,
-"broker_api_version = 2\n"
-"function init(params)\n"
-"  broker_log:set_parameters(1, \"/tmp/test.log\")\n"
-"  for i,v in pairs(params) do\n"
-"    broker_log:info(1, \"init: \" .. i .. \" => \" .. tostring(v))\n"
-"  end\n"
-"end\n"
-"function write(d)\n"
-"  for i,v in pairs(d) do\n"
-"    broker_log:info(1, \"write: \" .. i .. \" => \" .. tostring(v))\n"
-"  end\n"
-"  return true\n"
-"end\n"
-"function filter(typ, cat)\n"
-"  return true\n"
-"end\n");
+  CreateScript(
+      filename,
+      "broker_api_version = 2\n"
+      "function init(params)\n"
+      "  broker_log:set_parameters(1, \"/tmp/test.log\")\n"
+      "  for i,v in pairs(params) do\n"
+      "    broker_log:info(1, \"init: \" .. i .. \" => \" .. tostring(v))\n"
+      "  end\n"
+      "end\n"
+      "function write(d)\n"
+      "  for i,v in pairs(d) do\n"
+      "    broker_log:info(1, \"write: \" .. i .. \" => \" .. tostring(v))\n"
+      "  end\n"
+      "  return true\n"
+      "end\n"
+      "function filter(typ, cat)\n"
+      "  return true\n"
+      "end\n");
 
   std::unique_ptr<luabinding> bnd(new luabinding(filename, conf, *_cache));
   ASSERT_TRUE(bnd.get());
@@ -2063,4 +2065,3 @@ TEST_F(LuaTest, BrokerEventCache) {
   RemoveFile(filename);
   RemoveFile("/tmp/event_log");
 }
-

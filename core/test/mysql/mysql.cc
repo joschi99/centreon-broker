@@ -53,8 +53,9 @@ class DatabaseStorageTest : public ::testing::Test {
  public:
   void SetUp() override {
     try {
-      config::applier::init();
-    } catch (std::exception const& e) {
+      config::applier::init(0, "test_broker");
+    }
+    catch (std::exception const& e) {
       (void)e;
     }
   }
@@ -64,8 +65,8 @@ class DatabaseStorageTest : public ::testing::Test {
 // When there is no database
 // Then the mysql creation throws an exception
 TEST_F(DatabaseStorageTest, NoDatabase) {
-  database_config db_cfg("MySQL", "127.0.0.1", 9876, "admin", "centreon",
-                         "centreon_storage");
+  database_config db_cfg(
+      "MySQL", "127.0.0.1", 9876, "admin", "centreon", "centreon_storage");
   std::unique_ptr<mysql> ms;
   ASSERT_THROW(ms.reset(new mysql(db_cfg)), exceptions::msg);
 }
@@ -74,8 +75,8 @@ TEST_F(DatabaseStorageTest, NoDatabase) {
 // And when the connection is well done
 // Then no exception is thrown and the mysql object is well built.
 TEST_F(DatabaseStorageTest, ConnectionOk) {
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage");
+  database_config db_cfg(
+      "MySQL", "127.0.0.1", 3306, "centreon", "centreon", "centreon_storage");
   std::unique_ptr<mysql> ms;
   ASSERT_NO_THROW(ms.reset(new mysql(db_cfg)));
 }
@@ -86,8 +87,15 @@ TEST_F(DatabaseStorageTest, ConnectionOk) {
 // When the commit is done
 // Then the insert is available in the database.
 TEST_F(DatabaseStorageTest, SendDataBin) {
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   std::ostringstream oss;
   int now(time(nullptr));
@@ -116,8 +124,15 @@ TEST_F(DatabaseStorageTest, SendDataBin) {
 // Then we can bind values to it and execute the statement.
 // Then a commit makes data available in the database.
 TEST_F(DatabaseStorageTest, PrepareQuery) {
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::ostringstream oss;
   oss << "INSERT INTO "
       << "metrics"
@@ -168,8 +183,15 @@ TEST_F(DatabaseStorageTest, PrepareQuery) {
 // Then we can bind values to it and execute the statement.
 // Then a commit makes data available in the database.
 TEST_F(DatabaseStorageTest, PrepareQueryBadQuery) {
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::ostringstream oss;
   oss << "INSERT INTO "
       << "metrics"
@@ -206,8 +228,15 @@ TEST_F(DatabaseStorageTest, PrepareQueryBadQuery) {
 }
 
 TEST_F(DatabaseStorageTest, SelectSync) {
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::ostringstream oss;
   oss << "SELECT metric_id, index_id, metric_name FROM metrics LIMIT 10";
 
@@ -228,8 +257,15 @@ TEST_F(DatabaseStorageTest, SelectSync) {
 }
 
 TEST_F(DatabaseStorageTest, QuerySyncWithError) {
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
 
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   std::promise<mysql_result> promise;
@@ -238,8 +274,15 @@ TEST_F(DatabaseStorageTest, QuerySyncWithError) {
 }
 
 TEST_F(DatabaseStorageTest, QueryWithError) {
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
 
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   // The following insert fails
@@ -257,8 +300,15 @@ TEST_F(DatabaseStorageTest, QueryWithError) {
 // Then we can bind values to it and execute the statement.
 // Then a commit makes data available in the database.
 TEST_F(DatabaseStorageTest, LastInsertId) {
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::ostringstream nss;
   nss << "metric_name - " << time(nullptr) << "bis";
 
@@ -268,16 +318,15 @@ TEST_F(DatabaseStorageTest, LastInsertId) {
          " warn_threshold_mode, crit, crit_low,"
          " crit_threshold_mode, min, max, current_value,"
          " data_source_type)"
-         " VALUES (19, '"
-      << nss.str()
+         " VALUES (19, '" << nss.str()
       << "', 'test/s', 20.0, 40.0, 1, 10.0, 20.0, 1, 0.0, 50.0, 18.0, '2')";
 
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   // We force the thread 0
   std::cout << oss.str() << std::endl;
   std::promise<int> promise;
-  ms->run_query_and_get_int(oss.str(), &promise,
-                            mysql_task::int_type::LAST_INSERT_ID);
+  ms->run_query_and_get_int(
+      oss.str(), &promise, mysql_task::int_type::LAST_INSERT_ID);
   int id(promise.get_future().get());
 
   // Commit is needed to make the select later. But it is not needed to get
@@ -298,8 +347,15 @@ TEST_F(DatabaseStorageTest, LastInsertId) {
 }
 
 TEST_F(DatabaseStorageTest, PrepareQuerySync) {
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::ostringstream oss;
   oss << "INSERT INTO metrics"
       << "  (index_id, metric_name, unit_name, warn, warn_low,"
@@ -355,8 +411,15 @@ TEST_F(DatabaseStorageTest, PrepareQuerySync) {
 // Then we can bind values to it and execute the statement.
 // Then a commit makes data available in the database.
 TEST_F(DatabaseStorageTest, RepeatPrepareQuery) {
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::ostringstream oss;
   oss << "UPDATE metrics"
          " SET unit_name=?, warn=?, warn_low=?, warn_threshold_mode=?,"
@@ -388,8 +451,15 @@ TEST_F(DatabaseStorageTest, RepeatPrepareQuery) {
 TEST_F(DatabaseStorageTest, InstanceStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   query_preparator::event_unique unique;
   unique.insert("instance_id");
@@ -443,8 +513,15 @@ TEST_F(DatabaseStorageTest, InstanceStatement) {
 TEST_F(DatabaseStorageTest, HostStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
 
   query_preparator::event_unique unique;
@@ -469,8 +546,8 @@ TEST_F(DatabaseStorageTest, HostStatement) {
   h.timezone = "Europe/Paris";
 
   std::promise<int> promise;
-  ms->run_query_and_get_int("DELETE FROM hosts", &promise,
-                            mysql_task::int_type::AFFECTED_ROWS);
+  ms->run_query_and_get_int(
+      "DELETE FROM hosts", &promise, mysql_task::int_type::AFFECTED_ROWS);
   // We wait for the insertion.
   promise.get_future().get();
 
@@ -532,8 +609,15 @@ TEST_F(DatabaseStorageTest, HostStatement) {
 TEST_F(DatabaseStorageTest, CustomVarStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   query_preparator::event_unique unique;
   unique.insert("host_id");
@@ -584,8 +668,15 @@ TEST_F(DatabaseStorageTest, CustomVarStatement) {
 TEST_F(DatabaseStorageTest, ModuleStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   query_preparator qp(neb::module::static_type());
   mysql_stmt module_insert(qp.prepare_insert(*ms));
@@ -599,8 +690,8 @@ TEST_F(DatabaseStorageTest, ModuleStatement) {
 
   // Deletion
   std::promise<int> promise;
-  ms->run_query_and_get_int("DELETE FROM modules", &promise,
-                            mysql_task::AFFECTED_ROWS);
+  ms->run_query_and_get_int(
+      "DELETE FROM modules", &promise, mysql_task::AFFECTED_ROWS);
   // We wait for the deletion to be done
   promise.get_future().get();
 
@@ -620,8 +711,15 @@ TEST_F(DatabaseStorageTest, ModuleStatement) {
 TEST_F(DatabaseStorageTest, LogStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   query_preparator qp(neb::log_entry::static_type());
   mysql_stmt log_insert(qp.prepare_insert(*ms));
@@ -638,8 +736,8 @@ TEST_F(DatabaseStorageTest, LogStatement) {
 
   // Deletion
   std::promise<int> promise;
-  ms->run_query_and_get_int("DELETE FROM logs", &promise,
-                            mysql_task::int_type::AFFECTED_ROWS);
+  ms->run_query_and_get_int(
+      "DELETE FROM logs", &promise, mysql_task::int_type::AFFECTED_ROWS);
   // We wait for the deletion
   promise.get_future().get();
 
@@ -661,8 +759,15 @@ TEST_F(DatabaseStorageTest, LogStatement) {
 TEST_F(DatabaseStorageTest, InstanceStatusStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   query_preparator::event_unique unique;
   unique.insert("instance_id");
@@ -686,8 +791,8 @@ TEST_F(DatabaseStorageTest, InstanceStatusStatement) {
   // Insert
   inst_status_update << is;
   std::promise<int> promise;
-  ms->run_statement_and_get_int(inst_status_update, &promise,
-                                mysql_task::int_type::AFFECTED_ROWS);
+  ms->run_statement_and_get_int(
+      inst_status_update, &promise, mysql_task::int_type::AFFECTED_ROWS);
   ASSERT_TRUE(promise.get_future().get() == 1);
   ms->commit();
 
@@ -705,8 +810,15 @@ TEST_F(DatabaseStorageTest, InstanceStatusStatement) {
 TEST_F(DatabaseStorageTest, HostCheckStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   query_preparator::event_unique unique;
   unique.insert("host_id");
@@ -735,8 +847,15 @@ TEST_F(DatabaseStorageTest, HostCheckStatement) {
 TEST_F(DatabaseStorageTest, HostStatusStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   query_preparator::event_unique unique;
   unique.insert("host_id");
@@ -774,8 +893,8 @@ TEST_F(DatabaseStorageTest, HostStatusStatement) {
   // Update
   host_status_update << hs;
   std::promise<int> promise;
-  ms->run_statement_and_get_int(host_status_update, &promise,
-                                mysql_task::int_type::AFFECTED_ROWS);
+  ms->run_statement_and_get_int(
+      host_status_update, &promise, mysql_task::int_type::AFFECTED_ROWS);
 
   ASSERT_TRUE(promise.get_future().get() == 1);
 
@@ -792,8 +911,15 @@ TEST_F(DatabaseStorageTest, HostStatusStatement) {
 TEST_F(DatabaseStorageTest, ServiceStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   query_preparator::event_unique unique;
   unique.insert("host_id");
@@ -802,8 +928,8 @@ TEST_F(DatabaseStorageTest, ServiceStatement) {
   mysql_stmt service_insupdate(qp.prepare_insert_or_update(*ms));
 
   std::promise<int> promise;
-  ms->run_query_and_get_int("DELETE FROM services", &promise,
-                            mysql_task::int_type::AFFECTED_ROWS);
+  ms->run_query_and_get_int(
+      "DELETE FROM services", &promise, mysql_task::int_type::AFFECTED_ROWS);
   promise.get_future().get();
 
   neb::service s;
@@ -844,8 +970,15 @@ TEST_F(DatabaseStorageTest, ServiceStatement) {
 TEST_F(DatabaseStorageTest, ServiceCheckStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   query_preparator::event_unique unique;
   unique.insert("host_id");
@@ -861,8 +994,8 @@ TEST_F(DatabaseStorageTest, ServiceCheckStatement) {
   // Update
   service_check_update << sc;
   std::promise<int> promise;
-  ms->run_statement_and_get_int(service_check_update, &promise,
-                                mysql_task::int_type::AFFECTED_ROWS);
+  ms->run_statement_and_get_int(
+      service_check_update, &promise, mysql_task::int_type::AFFECTED_ROWS);
 
   ASSERT_TRUE(promise.get_future().get() == 1);
 
@@ -880,8 +1013,15 @@ TEST_F(DatabaseStorageTest, ServiceCheckStatement) {
 TEST_F(DatabaseStorageTest, ServiceStatusStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   query_preparator::event_unique unique;
   unique.insert("host_id");
@@ -900,8 +1040,8 @@ TEST_F(DatabaseStorageTest, ServiceStatusStatement) {
   // Update
   service_status_update << ss;
   std::promise<int> promise;
-  ms->run_statement_and_get_int(service_status_update, &promise,
-                                mysql_task::int_type::AFFECTED_ROWS);
+  ms->run_statement_and_get_int(
+      service_status_update, &promise, mysql_task::int_type::AFFECTED_ROWS);
 
   ASSERT_TRUE(promise.get_future().get() == 1);
 
@@ -911,8 +1051,15 @@ TEST_F(DatabaseStorageTest, ServiceStatusStatement) {
 TEST_F(DatabaseStorageTest, CustomvariableStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
 
   query_preparator::event_unique unique;
@@ -960,8 +1107,15 @@ TEST_F(DatabaseStorageTest, CustomvariableStatement) {
 TEST_F(DatabaseStorageTest, SelectStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   std::string query("SELECT value,status FROM data_bin WHERE ctime >= ?");
   mysql_stmt select_stmt(ms->prepare_query(query));
@@ -979,8 +1133,15 @@ TEST_F(DatabaseStorageTest, SelectStatement) {
 TEST_F(DatabaseStorageTest, DowntimeStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
 
   std::string query(
@@ -1024,8 +1185,8 @@ TEST_F(DatabaseStorageTest, DowntimeStatement) {
 
   downtime_insupdate << d;
   std::promise<int> promise;
-  ms->run_statement_and_get_int(downtime_insupdate, &promise,
-                                mysql_task::int_type::AFFECTED_ROWS);
+  ms->run_statement_and_get_int(
+      downtime_insupdate, &promise, mysql_task::int_type::AFFECTED_ROWS);
 
   std::cout << "downtime_insupdate: " << downtime_insupdate.get_query()
             << std::endl;
@@ -1037,8 +1198,15 @@ TEST_F(DatabaseStorageTest, DowntimeStatement) {
 TEST_F(DatabaseStorageTest, HostGroupMemberStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
 
   ms->run_query("DELETE FROM hostgroups");
@@ -1072,7 +1240,8 @@ TEST_F(DatabaseStorageTest, HostGroupMemberStatement) {
       ms->run_statement_and_get_result(host_group_member_insert, &promise));
   try {
     promise.get_future().get();
-  } catch (std::exception const& e) {
+  }
+  catch (std::exception const& e) {
     neb::host_group hg;
     hg.id = 8;
     hg.name = "Test hostgroup";
@@ -1084,11 +1253,15 @@ TEST_F(DatabaseStorageTest, HostGroupMemberStatement) {
     std::cout << host_group_insupdate.get_query() << std::endl;
 
     ms->run_statement(host_group_insupdate,
-                      "Error: Unable to create host group", true, thread_id);
+                      "Error: Unable to create host group",
+                      true,
+                      thread_id);
 
     host_group_member_insert << hgm;
-    ms->run_statement(host_group_member_insert, "Error: host group not defined",
-                      true, thread_id);
+    ms->run_statement(host_group_member_insert,
+                      "Error: host group not defined",
+                      true,
+                      thread_id);
   }
   ms->commit();
 }
@@ -1096,8 +1269,15 @@ TEST_F(DatabaseStorageTest, HostGroupMemberStatement) {
 TEST_F(DatabaseStorageTest, HostParentStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
 
   query_preparator qp(neb::host_parent::static_type());
@@ -1123,8 +1303,10 @@ TEST_F(DatabaseStorageTest, HostParentStatement) {
 
   promise = std::promise<int>();
   // Second insert attempted just for the check
-  ms->run_statement_and_get_int(host_parent_insert, &promise,
-                                mysql_task::int_type::AFFECTED_ROWS, thread_id);
+  ms->run_statement_and_get_int(host_parent_insert,
+                                &promise,
+                                mysql_task::int_type::AFFECTED_ROWS,
+                                thread_id);
 
   ASSERT_TRUE(promise.get_future().get() == 0);
 
@@ -1133,8 +1315,10 @@ TEST_F(DatabaseStorageTest, HostParentStatement) {
 
   host_parent_delete << hp;
   promise = std::promise<int>();
-  ms->run_statement_and_get_int(host_parent_delete, &promise,
-                                mysql_task::int_type::AFFECTED_ROWS, thread_id);
+  ms->run_statement_and_get_int(host_parent_delete,
+                                &promise,
+                                mysql_task::int_type::AFFECTED_ROWS,
+                                thread_id);
 
   ASSERT_TRUE(promise.get_future().get() == 1);
   ms->commit();
@@ -1143,8 +1327,15 @@ TEST_F(DatabaseStorageTest, HostParentStatement) {
 TEST_F(DatabaseStorageTest, ServiceGroupMemberStatement) {
   modules::loader l;
   l.load_file("./neb/10-neb.so");
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
 
   ms->run_query("DELETE FROM servicegroups");
@@ -1187,12 +1378,14 @@ TEST_F(DatabaseStorageTest, ServiceGroupMemberStatement) {
   service_group_insupdate << sg;
 
   ms->run_statement(service_group_insupdate,
-                    "Error: Unable to create service group", true, thread_id);
+                    "Error: Unable to create service group",
+                    true,
+                    thread_id);
 
   promise = std::promise<mysql_result>();
   service_group_member_insert << sgm;
-  ms->run_statement_and_get_result(service_group_member_insert, &promise,
-                                   thread_id);
+  ms->run_statement_and_get_result(
+      service_group_member_insert, &promise, thread_id);
   ASSERT_NO_THROW(promise.get_future().get());
   ms->commit();
 }
@@ -1264,8 +1457,15 @@ TEST_F(DatabaseStorageTest, ServiceGroupMemberStatement) {
 
 TEST_F(DatabaseStorageTest, ChooseConnectionByName) {
   modules::loader l;
-  database_config db_cfg("MySQL", "127.0.0.1", 3306, "centreon", "centreon",
-                         "centreon_storage", 5, true, 5);
+  database_config db_cfg("MySQL",
+                         "127.0.0.1",
+                         3306,
+                         "centreon",
+                         "centreon",
+                         "centreon_storage",
+                         5,
+                         true,
+                         5);
   std::unique_ptr<mysql> ms(new mysql(db_cfg));
   int thread_foo(ms->choose_connection_by_name("foo"));
   int thread_bar(ms->choose_connection_by_name("bar"));

@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
   QCoreApplication app(argc, argv);
 
   // Initialization.
-  config::applier::init();
+  config::applier::init(0, "test_broker");
 
   // Generate file name.
   std::string filename(misc::temp_path());
@@ -92,8 +92,8 @@ int main(int argc, char* argv[]) {
     else {
       current += rb;
       if (current == sizeof(buffer)) {
-        retval |= memcmp(buffer, "0123456789abcdefghijklmnopqrstuvwxyz",
-                         sizeof(buffer));
+        retval |= memcmp(
+            buffer, "0123456789abcdefghijklmnopqrstuvwxyz", sizeof(buffer));
         ++count;
         current = 0;
       }
