@@ -110,12 +110,13 @@ bool log_v2::load(const char* file,
         sinks.push_back(std::make_shared<sinks::stdout_color_sink_mt>());
 
       if (js["log_path"].is_string()) {
-        _log_name = fmt::format("{}/{}.log", js["log_path"].string_value(),
-                                broker_name);
+        _log_name = fmt::format("{}/{}.log",
+            js["log_path"].string_value(), broker_name);
         try {
           sinks.push_back(
               std::make_shared<sinks::basic_file_sink_mt>(_log_name));
-        } catch (...) {
+        }
+        catch (...) {
           err = fmt::format("log_v2 cannot log on '{}'", _log_name);
           return false;
         }
@@ -191,9 +192,7 @@ std::shared_ptr<spdlog::logger> log_v2::processing() {
   return instance()._processing_log;
 }
 
-std::shared_ptr<spdlog::logger> log_v2::bam() {
-  return instance()._bam_log;
-}
+std::shared_ptr<spdlog::logger> log_v2::bam() { return instance()._bam_log; }
 
 const std::string& log_v2::log_name() const {
   return _log_name;
