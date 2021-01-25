@@ -71,7 +71,6 @@ std::shared_ptr<io::stream> opener::open() {
  */
 void opener::set_auto_delete(bool auto_delete) {
   _auto_delete = auto_delete;
-  return;
 }
 
 /**

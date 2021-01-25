@@ -188,7 +188,7 @@ void engine::start() {
 void engine::stop() {
   if (_write_func != &engine::_nop) {
     // Notify hooks of multiplexing loop end.
-    logging::debug(logging::high) << "multiplexing: stopping";
+    log_v2::core()->debug("multiplexing: stopping");
     std::unique_lock<std::mutex> lock(_engine_m);
     for (std::vector<std::pair<hooker*, bool> >::iterator it(_hooks_begin),
          end(_hooks_end);
@@ -209,6 +209,7 @@ void engine::stop() {
       }
     }
 
+    log_v2::core()->debug("multiplexing: stopping 1");
     do {
       // Process events from hooks.
       _send_to_subscribers();
@@ -219,6 +220,7 @@ void engine::stop() {
       lock.lock();
     } while (!_kiew.empty());
 
+    log_v2::core()->debug("hooks empty, queue empty, saving the local queue");
     // Open the cache file and start the transaction.
     // The cache file is used to cache all the events produced
     // while the engine is stopped. It will be replayed next time
@@ -233,10 +235,12 @@ void engine::stop() {
       _cache_file.reset();
     }
 
+    log_v2::core()->debug("multiplexing: stopping 2");
     // Set writing method.
     _write_func = &engine::_write_to_cache_file;
     stats::center::instance().update(
         &EngineStats::set_mode, _stats, EngineStats::WRITE_TO_CACHE_FILE);
+    log_v2::core()->debug("multiplexing: stopping 3");
   }
 }
 
@@ -281,6 +285,10 @@ void engine::unload() {
                        _instance->_cache_file_path());
   delete _instance;
   _instance = nullptr;
+}
+
+engine::~engine() noexcept {
+  log_v2::core()->error("engine destroyed");
 }
 
 /**
@@ -381,6 +389,7 @@ void engine::_write(std::shared_ptr<io::data> const& e) {
  *  @param[in] d  Data to write.
  */
 void engine::_write_to_cache_file(std::shared_ptr<io::data> const& d) {
+  log_v2::core()->debug("write_to_cache_file...({})", _cache_file_path());
   try {
     if (_cache_file)
       _cache_file->add(d);

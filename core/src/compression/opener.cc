@@ -46,7 +46,7 @@ opener::~opener() noexcept {}
  *
  *  @return New compression object.
  */
-std::shared_ptr<io::stream> opener::open() {
+std::unique_ptr<io::stream> opener::open() {
   std::shared_ptr<io::stream> retval;
   if (_from)
     retval = _open(_from->open());

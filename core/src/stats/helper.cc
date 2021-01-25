@@ -96,6 +96,9 @@ void com::centreon::broker::stats::get_loaded_module_stats(
  */
 bool stats::get_endpoint_stats(std::vector<json11::Json::object>& object) {
   // Endpoint applier.
+  if (!config::applier::endpoint::loaded())
+    return true;
+
   config::applier::endpoint& endp_applier(
       config::applier::endpoint::instance());
 

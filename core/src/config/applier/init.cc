@@ -42,17 +42,23 @@ std::atomic<config::applier::applier_state> config::applier::state{not_started};
  *  Unload necessary structures.
  */
 void config::applier::deinit() {
+  log_v2::core()->error("config::applier::deinit 1");
   state = finished;
   config::applier::endpoint::unload();
+  log_v2::core()->error("config::applier::deinit 2");
   bbdo::unload();
+  log_v2::core()->error("config::applier::deinit 3");
   compression::unload();
+  log_v2::core()->error("config::applier::deinit 4");
   file::unload();
+  log_v2::core()->error("config::applier::deinit 5");
   multiplexing::engine::instance().clear();
   config::applier::modules::unload();
   multiplexing::engine::unload();
-  config::applier::state::unload();
+  log_v2::core()->error("config::applier::deinit 6");
   io::protocols::unload();
   io::events::unload();
+  config::applier::state::unload();
   stats::center::unload();
   pool::unload();
 }

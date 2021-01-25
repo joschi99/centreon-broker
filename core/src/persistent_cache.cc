@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Centreon (https://www.centreon.com/)
+ * Copyright 2014-2021 Centreon (https://www.centreon.com/)
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
@@ -21,10 +21,12 @@
 #include <cstdio>
 #include <cstring>
 #include <fstream>
+#include <unistd.h>
 #include "com/centreon/broker/bbdo/stream.hh"
 #include "com/centreon/broker/exceptions/shutdown.hh"
 #include "com/centreon/broker/file/opener.hh"
 #include "com/centreon/exceptions/msg_fmt.hh"
+#include "com/centreon/broker/log_v2.hh"
 
 using namespace com::centreon::exceptions;
 using namespace com::centreon::broker;
@@ -34,7 +36,7 @@ using namespace com::centreon::broker;
  *
  *  @param[in] cache_file  Path to the cache file.
  */
-persistent_cache::persistent_cache(std::string const& cache_file)
+persistent_cache::persistent_cache(const std::string& cache_file)
     : _cache_file(cache_file) {
   _open();
 }
@@ -66,21 +68,29 @@ void persistent_cache::add(std::shared_ptr<io::data> const& d) {
  */
 void persistent_cache::commit() {
   // Perform changes only if a transaction was started.
+  log_v2::core()->info("committing persistent_cache '{}'", _cache_file);
   if (_write_file) {
     _write_file.reset();
     _read_file.reset();
+    log_v2::core()->info("renaming persistent_cache '{}' to '{}'", _cache_file, _old_file());
     if (::rename(_cache_file.c_str(), _old_file().c_str())) {
       char const* msg(strerror(errno));
       throw msg_fmt("core: cache file '{}' could not be renamed to '{}' : {}",
                     _cache_file, _old_file(), msg);
-    } else if (::rename(_new_file().c_str(), _cache_file.c_str())) {
+    }
+    log_v2::core()->info("renaming persistent_cache '{}' to '{}'", _new_file(), _cache_file);
+    if (::rename(_new_file().c_str(), _cache_file.c_str())) {
       // .old file will be renamed by the _open() method.
       char const* msg(strerror(errno));
       throw msg_fmt("core: cache file '{}' could not be renamed to '{}' : {}",
                     _new_file(), _cache_file, msg);
     }
     // No error checking, this is a secondary issue.
-    ::remove(_old_file().c_str());
+    log_v2::core()->info("persistent_cache '{}' done", _cache_file);
+    log_v2::core()->info("removing persistent_cache '{}'", _old_file());
+    if (unlink(_old_file().c_str())) {
+      log_v2::core()->error("removing persistent_cache '{}' failed", _old_file());
+    }
   }
 }
 
@@ -102,19 +112,12 @@ void persistent_cache::get(std::shared_ptr<io::data>& d) {
 }
 
 /**
- *  Rollback a transaction.
- */
-void persistent_cache::rollback() {
-  _write_file.reset();
-  ::remove(_new_file().c_str());
-}
-
-/**
  *  @brief Start a transaction (a new persistent cache file).
  *
  *  The old cache won't be erased until commit() is called.
  */
 void persistent_cache::transaction() {
+  log_v2::core()->info("transaction on '{}'", _new_file());
   if (_write_file)
     throw msg_fmt("core: cache file '{}' is already open for writing",
                   _cache_file);
@@ -134,8 +137,8 @@ void persistent_cache::transaction() {
  *
  *  @return  The name of the cache file.
  */
-std::string const& persistent_cache::get_cache_file() const {
-  return (_cache_file);
+const std::string& persistent_cache::get_cache_file() const {
+  return _cache_file;
 }
 
 /**
@@ -144,9 +147,8 @@ std::string const& persistent_cache::get_cache_file() const {
  *  @return Cache file name appended with ".new".
  */
 std::string persistent_cache::_new_file() const {
-  std::string new_file(_cache_file);
-  new_file.append(".new");
-  return (new_file);
+  std::string new_file{fmt::format("{}.new", _cache_file)};
+  return new_file;
 }
 
 /**
@@ -155,9 +157,8 @@ std::string persistent_cache::_new_file() const {
  *  @return Cache file name appended with ".old".
  */
 std::string persistent_cache::_old_file() const {
-  std::string old_file(_cache_file);
-  old_file.append(".old");
-  return (old_file);
+  std::string old_file{fmt::format("{}.old", _cache_file)};
+  return old_file;
 }
 
 /**

@@ -81,8 +81,8 @@ class endpoint {
   typedef std::map<config::endpoint, processing::endpoint*>::iterator iterator;
 
   ~endpoint();
-  endpoint& operator=(endpoint const& other) = delete;
-  endpoint(endpoint const& other) = delete;
+  endpoint& operator=(const endpoint&) = delete;
+  endpoint(const endpoint&) = delete;
   void apply(std::list<config::endpoint> const& endpoints);
   void discard();
   iterator endpoints_begin();
@@ -91,6 +91,7 @@ class endpoint {
   static endpoint& instance();
   static void load();
   static void unload();
+  static bool loaded();
 };
 }  // namespace applier
 }  // namespace config

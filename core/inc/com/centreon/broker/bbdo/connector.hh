@@ -43,7 +43,7 @@ class connector : public io::endpoint {
   ~connector() noexcept {}
   connector(connector const&) = delete;
   connector& operator=(connector const&) = delete;
-  std::shared_ptr<io::stream> open();
+  std::unique_ptr<io::stream> open();
 
  private:
   std::shared_ptr<io::stream> _open(std::shared_ptr<io::stream> stream);

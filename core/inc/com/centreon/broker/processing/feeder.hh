@@ -55,7 +55,7 @@ class feeder : public stat_visitable {
 
   std::atomic_bool _should_exit;
 
-  std::shared_ptr<io::stream> _client;
+  std::unique_ptr<io::stream> _client;
   multiplexing::subscriber _subscriber;
 
   // This mutex is used for the stat thread.
@@ -71,7 +71,7 @@ class feeder : public stat_visitable {
 
  public:
   feeder(std::string const& name,
-         std::shared_ptr<io::stream> client,
+         std::unique_ptr<io::stream> client,
          std::unordered_set<uint32_t> const& read_filters,
          std::unordered_set<uint32_t> const& write_filters);
   ~feeder();

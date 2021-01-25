@@ -47,6 +47,7 @@ acceptor::acceptor(std::shared_ptr<io::endpoint> endp, std::string const& name)
  *  Destructor.
  */
 acceptor::~acceptor() {
+  log_v2::core()->info("Acceptor '{}' destruction", _name);
   exit();
 }
 
@@ -57,38 +58,57 @@ void acceptor::accept() {
   static uint32_t connection_id = 0;
 
   // Try to accept connection.
-  std::shared_ptr<io::stream> s(_endp->open());
+  std::shared_ptr<io::stream> s;
+  try {
+    s = _endp->open();
+  } catch (const std::exception& e) {
+    //FIXME DBR: no try catch initially
+    log_v2::core()->error("Fail to open endpoint '{}': {}", _name, e.what());
+    throw;
+  }
   if (s) {
     // Create feeder thread.
     std::string name(fmt::format("{}-{}", _name, ++connection_id));
     log_v2::core()->info("New incoming connection '{}'", name);
     std::shared_ptr<processing::feeder> f(std::make_shared<processing::feeder>(
-        name, s, _read_filters, _write_filters));
+        name, std::unique_ptr<io::stream>(s.release()), _read_filters, _write_filters));
 
+    log_v2::core()->info("accept 1");
     std::lock_guard<std::mutex> lock(_stat_mutex);
+    log_v2::core()->info("accept 2");
     _feeders.push_back(f);
+    log_v2::core()->info("accept 3");
     log_v2::core()->trace("Currently {} connections to acceptor '{}'",
                           _feeders.size(), _name);
+    log_v2::core()->info("accept 4");
   }
+  else
+    log_v2::core()->info("accept failed.");
 }
 
 /**
  *  Exit this thread.
  */
 void acceptor::exit() {
+  log_v2::config()->debug("acceptor exit 1");
   std::unique_lock<std::mutex> lck(_state_m);
   switch (_state) {
     case stopped:
+      log_v2::config()->debug("acceptor exit 2");
       _state = finished;
       break;
     case running:
+      log_v2::config()->debug("acceptor exit 3");
       _should_exit = true;
       _state_cv.wait(lck, [this] { return _state == acceptor::finished; });
+      log_v2::config()->debug("acceptor exit 3 bis");
       _thread.join();
       break;
     case finished:
+      log_v2::config()->debug("acceptor exit 4");
       break;
   }
+  log_v2::config()->debug("acceptor exit 5");
 }
 
 /**
@@ -196,6 +216,7 @@ void acceptor::_callback() noexcept {
 
   // Run as long as no exit request was made.
   while (!_should_exit) {
+    log_v2::core()->debug("accept callback");
     try {
       _set_listening(true);
       // Try to accept connection.
@@ -206,11 +227,10 @@ void acceptor::_callback() noexcept {
       logging::error(logging::high)
           << "acceptor: endpoint '" << _name
           << "' could not accept client: " << e.what();
+      log_v2::core()->error("acceptor: endpoint '{}' could not accept client: {}", _name, e.what());
 
       // Sleep a while before reconnection.
-      logging::info(logging::medium)
-          << "acceptor: endpoint '" << _name << "' will wait "
-          << _retry_interval << "s before attempting to accept a new client";
+      log_v2::core()->debug("acceptor: endpoint '{}' will wait {}s before attempting to accept a new client", _name, _retry_interval);
       time_t limit{time(nullptr) + _retry_interval};
       while (!_endp->is_ready() && !_should_exit && time(nullptr) < limit) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -237,5 +257,7 @@ void acceptor::_callback() noexcept {
 
   lock.lock();
   _state = acceptor::finished;
+  log_v2::core()->info("processing acceptor '{}' state set to FINISHED", _name);
   _state_cv.notify_all();
+  log_v2::core()->info("processing acceptor '{}' NOTIFICATION SENT", _name);
 }

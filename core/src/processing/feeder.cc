@@ -32,12 +32,6 @@ using namespace com::centreon::exceptions;
 using namespace com::centreon::broker;
 using namespace com::centreon::broker::processing;
 
-/**************************************
- *                                     *
- *           Public Methods            *
- *                                     *
- **************************************/
-
 /**
  *  Constructor.
  *
@@ -47,13 +41,13 @@ using namespace com::centreon::broker::processing;
  *  @param[in] write_filters  Write filters.
  */
 feeder::feeder(std::string const& name,
-               std::shared_ptr<io::stream> client,
+               std::unique_ptr<io::stream> client,
                std::unordered_set<uint32_t> const& read_filters,
                std::unordered_set<uint32_t> const& write_filters)
     : stat_visitable(name),
       _state{feeder::stopped},
       _should_exit{false},
-      _client(client),
+      _client(std::move(client)),
       _subscriber(name, false) {
   if (!client)
     throw msg_fmt("could not process '{}' with no client stream", _name);
@@ -208,10 +202,12 @@ void feeder::_callback() noexcept {
         << "feeder: error occured while processing client '" << _name
         << "': " << e.what();
     set_last_error(e.what());
+    log_v2::core()->info("feeder '{}' error: ", e.what());
   } catch (...) {
     logging::error(logging::high)
         << "feeder: unknown error occured while processing client '" << _name
         << "'";
+    log_v2::core()->info("feeder '{}' global error");
   }
 
   /* If we are here, that is because the loop is finished, and if we want
@@ -228,7 +224,7 @@ void feeder::_callback() noexcept {
     set_state("disconnected");
     _subscriber.get_muxer().remove_queue_files();
   }
-  log_v2::processing()->info("feeder: thread of client '{}' will exit", _name);
+  log_v2::core()->info("feeder: thread of client '{}' will exit", _name);
 }
 
 uint32_t feeder::_get_queued_events() const {

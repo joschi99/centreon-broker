@@ -18,6 +18,7 @@
 
 #include "com/centreon/broker/config/applier/endpoint.hh"
 
+#include <atomic>
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
@@ -47,6 +48,7 @@ using namespace com::centreon::broker::config::applier;
 
 // Class instance.
 static config::applier::endpoint* gl_endpoint = nullptr;
+static std::atomic_bool gl_loaded{false};
 
 /**
  * @brief Default constructor.
@@ -214,11 +216,14 @@ void endpoint::discard() {
     // Send termination requests.
     for (auto it = _endpoints.begin(), end = _endpoints.end(); it != end;
          ++it) {
+      log_v2::config()->debug("endpoint applier: destruction 1 {}", it->second->get_name());
       log_v2::config()->trace(
           "endpoint applier: send exit signal on endpoint '{}'",
           it->second->get_name());
       delete it->second;
+      log_v2::config()->debug("endpoint applier: destruction 1 {} DONE", it->second->get_name());
     }
+    log_v2::config()->debug("endpoint applier: destruction 2");
 
     log_v2::config()->debug("endpoint applier: all threads are terminated");
     _endpoints.clear();
@@ -266,14 +271,21 @@ endpoint& endpoint::instance() {
  *  Load singleton.
  */
 void endpoint::load() {
-  if (!gl_endpoint)
+  if (!gl_endpoint) {
     gl_endpoint = new endpoint;
+    gl_loaded = true;
+  }
+}
+
+bool endpoint::loaded() {
+  return gl_loaded;
 }
 
 /**
  *  Unload singleton.
  */
 void endpoint::unload() {
+  gl_loaded = false;
   delete gl_endpoint;
   gl_endpoint = nullptr;
 }
