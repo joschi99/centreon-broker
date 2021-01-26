@@ -21,25 +21,13 @@
 #include <cstdlib>
 #include <memory>
 #include "com/centreon/broker/logging/logging.hh"
+#include "com/centreon/broker/file/factory.hh"
+#include "com/centreon/broker/log_v2.hh"
 
 using namespace com::centreon::broker::io;
 
 // Class instance.
 static protocols* gl_protocols = nullptr;
-
-/**************************************
- *                                     *
- *           Public Methods            *
- *                                     *
- **************************************/
-
-/**
- *  Destructor.
- */
-protocols::~protocols() {
-  logging::info(logging::low) << "protocols: destruction (" << _protocols.size()
-                              << " protocols still registered)";
-}
 
 /**
  *  Get an iterator to the first registered protocol.
@@ -99,9 +87,7 @@ void protocols::reg(std::string const& name,
   p.osi_to = osi_to;
 
   // Register protocol in protocol list.
-  logging::info(logging::low) << "protocols: registering protocol '" << name
-                              << "' (layers " << osi_from << "-" << osi_to
-                              << ")";
+  log_v2::core()->info("protocols: registering protocol ({}' (layers {}-{})", name, osi_from, osi_to);
   _protocols[name] = p;
 }
 
@@ -124,13 +110,20 @@ void protocols::unreg(std::string const& name) {
   _protocols.erase(name);
 }
 
-/**************************************
- *                                     *
- *           Private Methods           *
- *                                     *
- **************************************/
-
 /**
  *  Default constructor.
  */
-protocols::protocols() {}
+protocols::protocols() {
+  // Registering internal protocols
+  reg("file", std::make_shared<file::factory>(), 1, 3);
+}
+
+/**
+ *  Destructor.
+ */
+protocols::~protocols() {
+  // Unregistering internal protocols
+  unreg("file");
+  log_v2::core()->info("protocols: destruction ({} protocols still registered)",
+      _protocols.size());
+}
