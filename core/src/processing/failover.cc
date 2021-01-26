@@ -65,7 +65,9 @@ failover::failover(std::shared_ptr<io::endpoint> endp,
 /**
  *  Destructor.
  */
-failover::~failover() { exit(); }
+failover::~failover() {
+  exit();
+}
 
 /**
  *  Add secondary endpoint to this failover thread.
@@ -191,8 +193,7 @@ void failover::_run() {
       for (std::vector<std::shared_ptr<io::endpoint> >::iterator
                it(_secondary_endpoints.begin()),
            end(_secondary_endpoints.end());
-           it != end;
-           ++it)
+           it != end; ++it)
         try {
           std::shared_ptr<io::stream> s((*it)->open());
           if (s)

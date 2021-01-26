@@ -230,10 +230,11 @@ void availability_thread::_build_availabilities(time_t midnight) {
           "BAM-BI: availability thread could not select the BA availabilities "
           "from the reporting database: {}",
           e.what());
-      throw msg_fmt("BAM-BI: availability thread "
-                    "could not select the BA availabilities "
-                    "from the reporting database: {}",
-                    e.what());
+      throw msg_fmt(
+          "BAM-BI: availability thread "
+          "could not select the BA availabilities "
+          "from the reporting database: {}",
+          e.what());
     }
   }
 
@@ -319,7 +320,8 @@ void availability_thread::_build_daily_availabilities(int thread_id,
       found->second.set_timeperiod_is_default(res.value_as_bool(7));
     }
   } catch (const std::exception& e) {
-    throw msg_fmt("BAM-BI: availability thread could not build the data {}", e.what());
+    throw msg_fmt("BAM-BI: availability thread could not build the data {}",
+                  e.what());
   }
 
   log_v2::bam()->debug("{} builders of availabilities created",
@@ -371,7 +373,7 @@ void availability_thread::_build_daily_availabilities(int thread_id,
                            ba_id);
     }
   } catch (const std::exception& e) {
-    throw msg_fmt("BAM-BI: availability thread could not build the data: {}", 
+    throw msg_fmt("BAM-BI: availability thread could not build the data: {}",
                   e.what());
   }
 
@@ -455,8 +457,10 @@ void availability_thread::_open_database() {
   try {
     _mysql.reset(new mysql(_db_cfg));
   } catch (const std::exception& e) {
-    throw msg_fmt("BAM-BI: availability thread could not connect to "
-                  "reporting database '{}'", e.what());
+    throw msg_fmt(
+        "BAM-BI: availability thread could not connect to "
+        "reporting database '{}'",
+        e.what());
   }
 }
 

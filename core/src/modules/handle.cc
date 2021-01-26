@@ -18,6 +18,7 @@
 
 #include "com/centreon/broker/modules/handle.hh"
 #include <cstring>
+#include "com/centreon/broker/log_v2.hh"
 #include "com/centreon/broker/logging/logging.hh"
 #include "com/centreon/exceptions/msg_fmt.hh"
 
@@ -46,23 +47,25 @@ char const* handle::versionning("broker_module_version");
 /**
  *  Default constructor.
  */
-handle::handle() : _handle{nullptr} {}
+handle::handle(const std::string& filename, const void* arg)
+    : _filename{filename},
+      _handle{dlopen(_filename.c_str(), RTLD_NOW | RTLD_GLOBAL)} {
+  // Could not load library.
+  if (!_handle)
+    throw msg_fmt("modules: could not load library '{}': {}", _filename,
+                  dlerror());
 
-/**
- *  Copy constructor.
- *
- *  @param[in] other  Object to copy.
- */
-handle::handle(handle const& other) {
-  open(other._filename);
+  // Initialize module.
+  _check_version();
+  _init(arg);
 }
 
 /**
  *  Destructor.
  */
-handle::~handle() {
+handle::~handle() noexcept {
   try {
-    close();
+    _close();
   } catch (std::exception const& e) {
     logging::error(logging::high) << e.what();
   } catch (...) {
@@ -79,11 +82,6 @@ handle::~handle() {
  *
  *  @return This object.
  */
-handle& handle::operator=(handle const& other) {
-  close();
-  open(other._filename);
-  return *this;
-}
 
 /**
  *  @brief Close the library object.
@@ -92,10 +90,10 @@ handle& handle::operator=(handle const& other) {
  *  module's deinitialization routine (if it exists) and then unload the
  *  library.
  */
-void handle::close() {
+void handle::_close() {
   if (is_open()) {
     // Log message.
-    logging::info(logging::medium) << "modules: closing '" << _filename << "'";
+    log_v2::core()->info("modules: closing '{}'", _filename);
 
     // Find deinitialization routine.
     union {
@@ -107,29 +105,26 @@ void handle::close() {
     // Could not find deinitialization routine.
     char const* error_str{dlerror()};
     if (error_str) {
-      logging::info(logging::medium) << "modules: could not find "
-                                        "deinitialization routine in '"
-                                     << _filename << "': " << error_str;
+      log_v2::core()->info(
+          "modules: could not find deinitialization routine in '{}': {}",
+          _filename, error_str);
     }
     // Call deinitialization routine.
     else {
-      logging::debug(logging::low)
-          << "modules: running deinitialization routine of '" << _filename
-          << "'";
+      log_v2::core()->debug("modules: running deinitialization routine of '{}'",
+                            _filename);
       (*(sym.code))();
     }
 
     // Reset library handle.
-    logging::debug(logging::low)
-        << "modules: unloading library '" << _filename << "'";
+    log_v2::core()->debug("modules: unloading library '{}'", _filename);
     // Library was not unloaded.
     if (dlclose(_handle)) {
       char const* error_str{dlerror()};
-      logging::info(logging::medium) << "modules: could not unload library '"
-                                     << _filename << "': " << error_str;
+      log_v2::core()->info("modules: could not unload library '{}': {}",
+                           _filename, error_str);
     } else {
       _handle = nullptr;
-      _filename.clear();
     }
   }
 }
@@ -140,35 +135,7 @@ void handle::close() {
  *  @return true if the library is loaded, false otherwise.
  */
 bool handle::is_open() const {
-  return _handle != nullptr;
-}
-
-/**
- *  Load a library file.
- *
- *  @param[in] filename Library filename.
- *  @param[in] arg      Library argument.
- */
-void handle::open(std::string const& filename, void const* arg) {
-  // Close library if previously open.
-  this->close();
-
-  // Load library.
-  logging::debug(logging::medium)
-      << "modules: loading library '" << filename << "'";
-  //_handle.setLoadHints(QLibrary::ResolveAllSymbolsHint
-  //  | QLibrary::ExportExternalSymbolsHint);
-  _filename = filename;
-  _handle = dlopen(filename.c_str(), RTLD_NOW | RTLD_GLOBAL);
-
-  // Could not load library.
-  if (!_handle)
-    throw msg_fmt("modules: could not load library '{}': {}", filename,
-                 dlerror());
-
-  // Initialize module.
-  _check_version();
-  _init(arg);
+  return _handle;
 }
 
 /**
@@ -179,8 +146,7 @@ void handle::open(std::string const& filename, void const* arg) {
 void handle::update(void const* arg) {
   // Check that library is loaded.
   if (!is_open())
-    throw msg_fmt("modules: could not update "
-                  "module that is not loaded");
+    throw msg_fmt("modules: could not update module that is not loaded");
 
   // Find update routine.
   union {
@@ -191,8 +157,7 @@ void handle::update(void const* arg) {
 
   // Found routine.
   if (sym.data) {
-    logging::debug(logging::low)
-        << "modules: running update routine of '" << _filename << "'";
+    log_v2::core()->debug("modules: running update routine of '{}'", _filename);
     (*(void (*)(void const*))(sym.code))(arg);
   }
 }
@@ -208,8 +173,8 @@ void handle::update(void const* arg) {
  */
 void handle::_check_version() {
   // Find version symbol.
-  logging::debug(logging::low) << "modules: checking module version (symbol "
-                               << versionning << ") in '" << _filename << "'";
+  log_v2::core()->debug("modules: checking module version (symbol {}) in '{}'",
+                        versionning, _filename);
 
   char const** version = (char const**)dlsym(_handle, versionning);
 
@@ -217,20 +182,21 @@ void handle::_check_version() {
   if (!version) {
     char const* error_str{dlerror()};
     throw msg_fmt(
-        "modules: could not find version in '{}'" 
-        " (not a Centreon Broker module ?): {}", _filename, error_str);
+        "modules: could not find version in '{}'"
+        " (not a Centreon Broker module ?): {}",
+        _filename, error_str);
   }
   if (!*version)
     throw msg_fmt(
-        "modules: version symbol of module '{}'" 
-        " is empty (not a Centreon Broker module ?)", _filename);
+        "modules: version symbol of module '{}'"
+        " is empty (not a Centreon Broker module ?)",
+        _filename);
 
   // Check version.
   if (::strcmp(CENTREON_BROKER_VERSION, *version) != 0)
     throw msg_fmt(
-        "modules: version mismatch in '{}': exepected '{}', found '{}'", _filename,
-        CENTREON_BROKER_VERSION, *version);
-
+        "modules: version mismatch in '{}': exepected '{}', found '{}'",
+        _filename, CENTREON_BROKER_VERSION, *version);
 }
 
 /**
@@ -251,11 +217,12 @@ void handle::_init(void const* arg) {
     char const* error_str = dlerror();
     throw msg_fmt(
         "modules: could not find initialization routine in '{}'"
-        " (not a Centreon Broker module ?): {}", _filename, error_str);
+        " (not a Centreon Broker module ?): {}",
+        _filename, error_str);
   }
 
   // Call initialization routine.
-  logging::debug(logging::medium)
-      << "modules: running initialization routine of '" << _filename << "'";
+  log_v2::core()->debug("modules: running initialization routine of '{}'",
+                        _filename);
   (*(void (*)(void const*))(sym.code))(arg);
 }

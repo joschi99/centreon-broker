@@ -29,6 +29,7 @@
 #include "com/centreon/broker/config/applier/modules.hh"
 #include "com/centreon/broker/instance_broadcast.hh"
 #include "com/centreon/broker/io/data.hh"
+#include "com/centreon/broker/log_v2.hh"
 #include "com/centreon/broker/logging/file.hh"
 #include "com/centreon/broker/logging/logging.hh"
 #include "com/centreon/broker/multiplexing/engine.hh"
@@ -42,17 +43,6 @@ using namespace com::centreon::broker::config::applier;
 
 // Class instance.
 static state* gl_state = nullptr;
-
-/**************************************
- *                                     *
- *           Public Methods            *
- *                                     *
- **************************************/
-
-/**
- *  Destructor.
- */
-state::~state() {}
 
 /**
  *  Apply a configuration state.
@@ -76,8 +66,7 @@ void state::apply(com::centreon::broker::config::state const& s, bool run_mux) {
         "are not set: please fill broker_id and broker_name");
   for (std::string::const_iterator it(s.broker_name().begin()),
        end(s.broker_name().end());
-       it != end;
-       ++it)
+       it != end; ++it)
     if (!strchr(allowed_chars, *it))
       throw msg_fmt(
           "state applier: broker_name is not "
@@ -85,22 +74,19 @@ void state::apply(com::centreon::broker::config::state const& s, bool run_mux) {
           allowed_chars);
   for (std::list<config::endpoint>::const_iterator it(s.endpoints().begin()),
        end(s.endpoints().end());
-       it != end;
-       ++it) {
+       it != end; ++it) {
     if (it->name.empty())
       throw msg_fmt(
           "state applier: endpoint name is not set: "
           "please fill name of all endpoints");
     for (std::string::const_iterator it_name(it->name.begin()),
          end_name(it->name.end());
-         it_name != end_name;
-         ++it_name)
+         it_name != end_name; ++it_name)
       if (!strchr(allowed_chars, *it_name))
         throw msg_fmt(
             "state applier: endpoint name '{}'"
             "' is not valid: allowed characters are '{}'",
-            *it_name,
-            allowed_chars);
+            *it_name, allowed_chars);
   }
 
   // Set Broker instance ID.
@@ -135,24 +121,21 @@ void state::apply(com::centreon::broker::config::state const& s, bool run_mux) {
       s.log_human_readable_timestamp());
 
   // Apply modules configuration.
-  modules::instance().apply(s.module_list(), s.module_directory(), &s);
+  _modules.apply(s.module_list(), s.module_directory(), &s);
   static bool first_application(true);
   if (first_application)
     first_application = false;
   else {
     uint32_t module_count(0);
-    for (modules::iterator it(modules::instance().begin()),
-         end(modules::instance().end());
-         it != end;
-         ++it)
+    for (modules::iterator it = _modules.begin(), end = _modules.end();
+         it != end; ++it)
       ++module_count;
     if (module_count)
-      logging::config(logging::high) << "applier: " << module_count
-                                     << " modules loaded";
+      log_v2::config()->info("applier: {} modules loaded", module_count);
     else
-      logging::config(logging::high)
-          << "applier: no module loaded, "
-             "you might want to check the 'module_directory' directive";
+      log_v2::config()->info(
+          "applier: no module loaded, you might want to check the "
+          "'module_directory' directive");
   }
 
   // Event queue max size (used to limit memory consumption).
@@ -182,7 +165,9 @@ void state::apply(com::centreon::broker::config::state const& s, bool run_mux) {
  *
  *  @return Cache directory.
  */
-std::string const& state::cache_dir() const noexcept { return _cache_dir; }
+std::string const& state::cache_dir() const noexcept {
+  return _cache_dir;
+}
 
 /**
  *  Get the instance of this object.
@@ -202,19 +187,27 @@ void state::load() {
     gl_state = new state;
 }
 
+bool state::loaded() {
+  return gl_state;
+}
+
 /**
  *  Get the poller ID.
  *
  *  @return Poller ID of this Broker instance.
  */
-uint32_t state::poller_id() const noexcept { return _poller_id; }
+uint32_t state::poller_id() const noexcept {
+  return _poller_id;
+}
 
 /**
  *  Get the poller name.
  *
  *  @return Poller name of this Broker instance.
  */
-std::string const& state::poller_name() const noexcept { return _poller_name; }
+std::string const& state::poller_name() const noexcept {
+  return _poller_name;
+}
 
 /**
  * @brief Get the thread pool size.
@@ -222,7 +215,9 @@ std::string const& state::poller_name() const noexcept { return _poller_name; }
  * @return Number of threads in the pool or 0 which means the number of threads
  * will be computed as max(2, number of CPUs / 2).
  */
-size_t state::pool_size() const noexcept { return _pool_size; }
+size_t state::pool_size() const noexcept {
+  return _pool_size;
+}
 
 /**
  *  Unload singleton.
@@ -232,13 +227,11 @@ void state::unload() {
   gl_state = nullptr;
 }
 
-/**************************************
- *                                     *
- *           Private Methods           *
- *                                     *
- **************************************/
-
 /**
  *  Default constructor.
  */
 state::state() : _poller_id(0), _rpc_port(0) {}
+
+config::applier::modules& state::get_modules() {
+  return _modules;
+}

@@ -26,7 +26,6 @@
 #include <json11.hpp>
 #include <thread>
 #include "com/centreon/broker/config/applier/endpoint.hh"
-#include "com/centreon/broker/config/applier/modules.hh"
 #include "com/centreon/broker/config/applier/state.hh"
 #include "com/centreon/broker/config/parser.hh"
 #include "com/centreon/broker/exceptions/shutdown.hh"
@@ -37,9 +36,9 @@
 #include "com/centreon/broker/misc/misc.hh"
 #include "com/centreon/broker/misc/string.hh"
 #include "com/centreon/broker/multiplexing/engine.hh"
+#include "com/centreon/broker/pool.hh"
 #include "com/centreon/broker/stats/builder.hh"
 #include "com/centreon/exceptions/msg_fmt.hh"
-#include "com/centreon/broker/pool.hh"
 
 using namespace com::centreon::exceptions;
 using namespace com::centreon::broker;
@@ -51,7 +50,6 @@ class StatsTest : public ::testing::Test {
     stats::center::load();
     multiplexing::engine::load();
     config::applier::state::load();
-    config::applier::modules::load();
     config::applier::endpoint::load();
     io::events::load();
     io::protocols::load();
@@ -59,7 +57,6 @@ class StatsTest : public ::testing::Test {
 
   void TearDown() override {
     config::applier::endpoint::unload();
-    config::applier::modules::unload();
     config::applier::state::load();
     io::protocols::unload();
     io::events::unload();
@@ -89,12 +86,10 @@ TEST_F(StatsTest, Builder) {
 
 TEST_F(StatsTest, BuilderWithModules) {
   stats::builder build;
-  config::applier::modules::instance().apply(
-      std::list<std::string>{}, "./storage/", nullptr);
-  config::applier::modules::instance().apply(
-      std::list<std::string>{}, "./neb/", nullptr);
-  config::applier::modules::instance().apply(
-      std::list<std::string>{}, "./lua/", nullptr);
+  auto& modules = config::applier::state::instance().get_modules();
+  modules.apply(std::list<std::string>{}, "./storage/", nullptr);
+  modules.apply(std::list<std::string>{}, "./neb/", nullptr);
+  modules.apply(std::list<std::string>{}, "./lua/", nullptr);
 
   build.build();
 

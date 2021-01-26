@@ -57,7 +57,9 @@ void pool::unload() {
  *
  * @return the IO context.
  */
-asio::io_context& pool::io_context() { return instance()._io_context; }
+asio::io_context& pool::io_context() {
+  return instance()._io_context;
+}
 
 /**
  * @brief Default constructor. Private, it is called throw the static instance()
@@ -71,10 +73,10 @@ asio::io_context& pool::io_context() { return instance()._io_context; }
  */
 pool::pool(size_t size)
     : _stats(nullptr),
-      _pool_size{size == 0 ? std::max(std::thread::hardware_concurrency(), 2u)
+      _pool_size{size == 0 ? std::max(std::thread::hardware_concurrency(), 3u)
                            : size},
       _io_context(_pool_size),
-      _worker(_io_context),
+      _worker(new asio::io_service::work(_io_context)),
       _closed(true),
       _timer(_io_context),
       _stats_running{false} {
@@ -109,8 +111,14 @@ void pool::start_stats(ThreadPool* stats) {
 
 void pool::stop_stats() {
   if (_stats_running) {
-    _stats_running = false;
-    asio::post(_timer.get_executor(), [this] { _timer.cancel(); });
+    std::promise<bool> p;
+    std::future<bool> f(p.get_future());
+    asio::post(_timer.get_executor(), [this, &p] {
+      _stats_running = false;
+      _timer.cancel();
+      p.set_value(true);
+    });
+    f.get();
   }
 }
 
@@ -172,4 +180,6 @@ void pool::_check_latency(asio::error_code ec) {
   }
 }
 
-double pool::get_last_check_latency() { return _last_check_latency; }
+double pool::get_last_check_latency() {
+  return _last_check_latency;
+}

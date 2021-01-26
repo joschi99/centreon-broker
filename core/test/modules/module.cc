@@ -21,7 +21,7 @@
 #include <iostream>
 #include <string>
 #include "com/centreon/broker/config/applier/init.hh"
-#include "com/centreon/broker/modules/loader.hh"
+#include "com/centreon/broker/modules/handle.hh"
 
 using namespace com::centreon::broker;
 
@@ -36,14 +36,11 @@ using namespace com::centreon::broker;
 bool check_for(std::string const& module,
                std::string const& expected_error_msg) {
   try {
-    modules::loader l;
-
-    l.load_file(module);
-    return (false);
-  }
-  catch (std::exception const& e) {
+    modules::handle h(module);
+    return false;
+  } catch (std::exception const& e) {
     std::cout << e.what() << std::endl;
-    return (std::string { e.what() }.find(expected_error_msg) !=
+    return (std::string{e.what()}.find(expected_error_msg) !=
             std::string::npos);
   }
 }

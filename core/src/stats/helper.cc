@@ -22,7 +22,7 @@
 #include <json11.hpp>
 
 #include "com/centreon/broker/config/applier/endpoint.hh"
-#include "com/centreon/broker/config/applier/modules.hh"
+#include "com/centreon/broker/config/applier/state.hh"
 #include "com/centreon/broker/config/endpoint.hh"
 #include "com/centreon/broker/misc/filesystem.hh"
 #include "com/centreon/broker/multiplexing/muxer.hh"
@@ -44,8 +44,7 @@ void com::centreon::broker::stats::get_generic_stats(
   object["pid"] = getpid();
   object["now"] = std::to_string(::time(nullptr));
 
-  std::string asio_version(fmt::format("{}.{}.{}",
-                                       ASIO_VERSION / 100000,
+  std::string asio_version(fmt::format("{}.{}.{}", ASIO_VERSION / 100000,
                                        ASIO_VERSION / 100 % 1000,
                                        ASIO_VERSION % 100));
   object["asio_version"] = asio_version;
@@ -70,14 +69,14 @@ void com::centreon::broker::stats::get_mysql_stats(
 
 void com::centreon::broker::stats::get_loaded_module_stats(
     std::vector<json11::Json::object>& object) noexcept {
-  config::applier::modules& mod_applier(config::applier::modules::instance());
+  config::applier::modules& mod_applier(
+      config::applier::state::instance().get_modules());
 
   std::lock_guard<std::mutex> lock(mod_applier.module_mutex());
 
-  for (config::applier::modules::iterator it(mod_applier.begin()),
-       end(mod_applier.end());
-       it != end;
-       ++it) {
+  for (config::applier::modules::iterator it = mod_applier.begin(),
+                                          end = mod_applier.end();
+       it != end; ++it) {
     json11::Json::object subtree;
     subtree["name"] = it->first;
     subtree["state"] = "loaded";
@@ -110,8 +109,7 @@ bool stats::get_endpoint_stats(std::vector<json11::Json::object>& object) {
       if (locked)
         for (auto it(endp_applier.endpoints_begin()),
              end(endp_applier.endpoints_end());
-             it != end;
-             ++it) {
+             it != end; ++it) {
           json11::Json::object subtree;
           subtree["name"] = it->second->get_name();
           subtree["queue_file_path"] =
@@ -123,8 +121,7 @@ bool stats::get_endpoint_stats(std::vector<json11::Json::object>& object) {
           it->second->stats(subtree);
           object.emplace_back(subtree);
         }
-    }
-    catch (...) {
+    } catch (...) {
       if (locked)
         endp_applier.endpoints_mutex().unlock();
       throw;

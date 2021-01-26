@@ -510,7 +510,7 @@ stream::stream()
 int32_t stream::stop() {
   _substream->stop();
   int retval = _acknowledged_events;
-  _acknowledged_events = 0;
+  _acknowledged_events -= retval;
   io::stream::stop();
   return retval;
 }

@@ -24,9 +24,7 @@
 #include "com/centreon/broker/config/applier/modules.hh"
 #include "com/centreon/broker/config/applier/state.hh"
 #include "com/centreon/broker/misc/filesystem.hh"
-#include "com/centreon/broker/modules/loader.hh"
 #include "com/centreon/broker/version.hh"
-#include <iostream>
 
 using namespace com::centreon::broker;
 using namespace com::centreon::broker::stats;
@@ -52,19 +50,18 @@ void center::unload() {
 
 center::center() : _strand(pool::instance().io_context()) {
   *_stats.mutable_version() = version::string;
-  *_stats.mutable_asio_version() = fmt::format("{}.{}.{}",
-                                               ASIO_VERSION / 100000,
-                                               ASIO_VERSION / 100 % 1000,
-                                               ASIO_VERSION % 100);
+  *_stats.mutable_asio_version() =
+      fmt::format("{}.{}.{}", ASIO_VERSION / 100000, ASIO_VERSION / 100 % 1000,
+                  ASIO_VERSION % 100);
   _stats.set_pid(getpid());
 
   /* Bringing modules statistics */
-  if (config::applier::modules::loaded()) {
-    config::applier::modules& mod_applier(config::applier::modules::instance());
-    for (config::applier::modules::iterator it(mod_applier.begin()),
-         end(mod_applier.end());
-         it != end;
-         ++it) {
+  if (config::applier::state::loaded()) {
+    config::applier::modules& mod_applier(
+        config::applier::state::instance().get_modules());
+    for (config::applier::modules::iterator it = mod_applier.begin(),
+                                            end = mod_applier.end();
+         it != end; ++it) {
       auto m = _stats.add_modules();
       *m->mutable_name() = it->first;
       *m->mutable_size() =
@@ -147,14 +144,16 @@ MysqlConnectionStats* center::register_mysql_connection(
 bool center::unregister_mysql_connection(MysqlConnectionStats* c) {
   std::promise<bool> p;
   std::future<bool> retval = p.get_future();
-  _strand.post([this,c, &p] {
-    for (auto it = _stats.mutable_mysql_manager()->mutable_connections()->begin(),
-              end = _stats.mutable_mysql_manager()->mutable_connections()->end();
-              it != end; ++it) {
-        if (&(*it) == c) { 
-          _stats.mutable_mysql_manager()->mutable_connections()->erase(it);
-          break;
-        }
+  _strand.post([this, c, &p] {
+    for (auto
+             it =
+                 _stats.mutable_mysql_manager()->mutable_connections()->begin(),
+             end = _stats.mutable_mysql_manager()->mutable_connections()->end();
+         it != end; ++it) {
+      if (&(*it) == c) {
+        _stats.mutable_mysql_manager()->mutable_connections()->erase(it);
+        break;
+      }
     }
     p.set_value(true);
   });
@@ -192,8 +191,7 @@ bool center::unregister_endpoint(const std::string& name) {
   std::future<bool> retval = p.get_future();
   _strand.post([this, &p, &name] {
     for (auto it = _stats.mutable_endpoint()->begin();
-         it != _stats.mutable_endpoint()->end();
-         ++it) {
+         it != _stats.mutable_endpoint()->end(); ++it) {
       if (it->name() == name) {
         _stats.mutable_endpoint()->erase(it);
         break;
@@ -250,7 +248,6 @@ bool center::unregister_mysql_manager(void) {
   return retval.get();
 }
 
-
 /**
  * @brief To allow the conflict manager to send statistics, it has to call this
  * function to get a pointer to its statistics container.
@@ -277,20 +274,17 @@ ModuleStats* center::register_modules() {
 std::string center::to_string() {
   std::promise<std::string> p;
   std::future<std::string> retval = p.get_future();
-  _strand.post([
-    &s = this->_stats,
-    &p,
-    &tmpnow = this->_json_stats_file_creation
-  ] {
-      const JsonPrintOptions options;
-      std::string retval;
-      std::time_t now;
-      time(&now);
-      tmpnow = (int)now;
-      s.set_now(now);
-      MessageToJsonString(s, &retval, options);
-      p.set_value(std::move(retval));
-    });
+  _strand.post(
+      [&s = this->_stats, &p, &tmpnow = this->_json_stats_file_creation] {
+        const JsonPrintOptions options;
+        std::string retval;
+        std::time_t now;
+        time(&now);
+        tmpnow = (int)now;
+        s.set_now(now);
+        MessageToJsonString(s, &retval, options);
+        p.set_value(std::move(retval));
+      });
 
   return retval.get();
 }
@@ -298,20 +292,16 @@ std::string center::to_string() {
 void center::get_stats(const StatsQuery* request, BrokerStats* response) {
   std::promise<bool> p;
   std::future<bool> done = p.get_future();
-  _strand.post([
-    &s = this->_stats,
-    &p,
-    request, response
-  ] {
-      for (auto& q : request->query()) {
-        switch (q) {
-         case StatsQuery::ENGINE:
-            *response->mutable_engine() = s.engine();
-            break;
-        }
+  _strand.post([&s = this->_stats, &p, request, response] {
+    for (auto& q : request->query()) {
+      switch (q) {
+        case StatsQuery::ENGINE:
+          *response->mutable_engine() = s.engine();
+          break;
       }
-      p.set_value(true);
-    });
+    }
+    p.set_value(true);
+  });
 
   // We wait for the response.
   done.get();

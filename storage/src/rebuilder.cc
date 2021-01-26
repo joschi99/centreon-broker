@@ -89,7 +89,8 @@ rebuilder::~rebuilder() {
  */
 void rebuilder::_run(asio::error_code ec) {
   if (ec)
-    log_v2::sql()->info("storage: rebuilder timer error: {}", ec.message());
+    log_v2::sql()->info("storage: rebuilder timer interrupted: {}",
+                        ec.message());
   else {
     try {
       // Open DB.

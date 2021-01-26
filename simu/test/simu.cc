@@ -22,7 +22,7 @@
 #include <memory>
 #include "com/centreon/broker/config/applier/init.hh"
 #include "com/centreon/broker/instance_broadcast.hh"
-#include "com/centreon/broker/modules/loader.hh"
+#include "com/centreon/broker/modules/handle.hh"
 #include "com/centreon/broker/neb/events.hh"
 #include "com/centreon/broker/simu/luabinding.hh"
 #include "com/centreon/broker/storage/status.hh"
@@ -38,8 +38,7 @@ class SimuGenericTest : public ::testing::Test {
   void SetUp() override {
     try {
       config::applier::init(0, "test_broker");
-    }
-    catch (std::exception const& e) {
+    } catch (std::exception const& e) {
       (void)e;
     }
   }
@@ -182,8 +181,7 @@ TEST_F(SimuGenericTest, ReadReturnValue4) {
                "}\n"
                "end\n");
   std::map<std::string, misc::variant> conf;
-  modules::loader l;
-  l.load_file("./neb/10-neb.so");
+  modules::handle h("./neb/10-neb.so");
   std::unique_ptr<luabinding> lb(new luabinding(filename, conf));
   std::shared_ptr<io::data> d;
   ASSERT_TRUE(lb->read(d));
@@ -218,8 +216,7 @@ TEST_F(SimuGenericTest, ReadReturnCustomVariable) {
                "    default_value=\"centengine\"}\n"
                "end\n");
   std::map<std::string, misc::variant> conf;
-  modules::loader l;
-  l.load_file("./neb/10-neb.so");
+  modules::handle h("./neb/10-neb.so");
   std::unique_ptr<luabinding> lb(new luabinding(filename, conf));
   std::shared_ptr<io::data> d;
   ASSERT_TRUE(lb->read(d));

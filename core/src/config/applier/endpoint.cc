@@ -18,8 +18,8 @@
 
 #include "com/centreon/broker/config/applier/endpoint.hh"
 
-#include <atomic>
 #include <algorithm>
+#include <atomic>
 #include <cassert>
 #include <cstdlib>
 #include <list>
@@ -103,7 +103,7 @@ class name_match_failover {
  *  Destructor.
  */
 endpoint::~endpoint() {
-  discard();
+  _discard();
 }
 
 /**
@@ -201,7 +201,7 @@ void endpoint::apply(std::list<config::endpoint> const& endpoints) {
  *  Discard applied configuration. Running endpoints are destroyed one by one.
  *
  */
-void endpoint::discard() {
+void endpoint::_discard() {
   _discarding = true;
   log_v2::config()->debug("endpoint applier: destruction");
 
@@ -216,12 +216,14 @@ void endpoint::discard() {
     // Send termination requests.
     for (auto it = _endpoints.begin(), end = _endpoints.end(); it != end;
          ++it) {
-      log_v2::config()->debug("endpoint applier: destruction 1 {}", it->second->get_name());
+      log_v2::config()->debug("endpoint applier: destruction 1 {}",
+                              it->second->get_name());
       log_v2::config()->trace(
           "endpoint applier: send exit signal on endpoint '{}'",
           it->second->get_name());
       delete it->second;
-      log_v2::config()->debug("endpoint applier: destruction 1 {} DONE", it->second->get_name());
+      log_v2::config()->debug("endpoint applier: destruction 1 {} DONE",
+                              it->second->get_name());
     }
     log_v2::config()->debug("endpoint applier: destruction 2");
 

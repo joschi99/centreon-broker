@@ -42,7 +42,7 @@ class connector : public io::endpoint {
             uint32_t ack_limit = 1000);
   ~connector() noexcept {}
   connector(connector const&) = delete;
-  connector& operator=(connector const&) = delete;
+  connector& operator=(const connector&) = delete;
   std::unique_ptr<io::stream> open();
 
  private:
