@@ -111,14 +111,18 @@ time_t failover::get_buffering_timeout() const throw() {
  *
  *  @return True if the thread is initializable. That is it is read()able.
  */
-bool failover::get_initialized() const throw() { return _initialized; }
+bool failover::get_initialized() const throw() {
+  return _initialized;
+}
 
 /**
  *  Get retry interval.
  *
  *  @return Failover thread retry interval.
  */
-time_t failover::get_retry_interval() const throw() { return _retry_interval; }
+time_t failover::get_retry_interval() const throw() {
+  return _retry_interval;
+}
 
 /**
  *  Thread core function.
@@ -172,8 +176,7 @@ void failover::_run() {
       if (_buffering_timeout > 0) {
         // Status.
         log_v2::processing()->debug(
-            "failover: buffering data for endpoint '{}' ({}s)",
-            _name,
+            "failover: buffering data for endpoint '{}' ({}s)", _name,
             _buffering_timeout);
         _update_status("buffering data");
 
@@ -202,12 +205,11 @@ void failover::_run() {
             logging::error(logging::medium)
                 << "failover: could not open a secondary of endpoint '" << _name
                 << ": secondary returned a null stream";
+        } catch (std::exception const& e) {
+          logging::error(logging::medium)
+              << "failover: error occured while opening a secondary "
+              << "of endpoint '" << _name << "': " << e.what();
         }
-      catch (std::exception const& e) {
-        logging::error(logging::medium)
-            << "failover: error occured while opening a secondary "
-            << "of endpoint '" << _name << "': " << e.what();
-      }
       _update_status("");
 
       // Shutdown failover.
@@ -255,12 +257,10 @@ void failover::_run() {
           try {
             std::lock_guard<std::timed_mutex> stream_lock(_stream_m);
             timed_out_stream = !_stream->read(d, 0);
-          }
-          catch (exceptions::shutdown const& e) {
+          } catch (exceptions::shutdown const& e) {
             log_v2::processing()->debug(
                 "failover: stream of endpoint '{}' shutdown while reading: {}",
-                _name,
-                e.what());
+                _name, e.what());
             stream_can_read = false;
           }
           if (d) {
@@ -289,13 +289,11 @@ void failover::_run() {
           try {
             timed_out_muxer = !_subscriber->get_muxer().read(d, 0);
             should_commit = should_commit || d;
-          }
-          catch (exceptions::shutdown const& e) {
+          } catch (exceptions::shutdown const& e) {
             log_v2::processing()->debug(
                 "failover: muxer of endpoint '{}' "
                 "shutdown while reading: {}",
-                _name,
-                e.what());
+                _name, e.what());
             muxer_can_read = false;
           }
           if (d) {
@@ -309,13 +307,11 @@ void failover::_run() {
             try {
               std::lock_guard<std::timed_mutex> stream_lock(_stream_m);
               we = _stream->write(d);
-            }
-            catch (exceptions::shutdown const& e) {
+            } catch (exceptions::shutdown const& e) {
               log_v2::processing()->debug(
                   "failover: stream of endpoint '{}' shutdown while writing: "
                   "{}",
-                  _name,
-                  e.what());
+                  _name, e.what());
               muxer_can_read = false;
             }
             _subscriber->get_muxer().ack_events(we);
@@ -327,8 +323,7 @@ void failover::_run() {
               try {
                 (*it)->write(d);
                 ++it;
-              }
-              catch (std::exception const& e) {
+              } catch (std::exception const& e) {
                 logging::error(logging::medium)
                     << "failover: error "
                     << "occurred while writing to a secondary of endpoint '"
@@ -344,7 +339,7 @@ void failover::_run() {
         d.reset();
         if (timed_out_stream && timed_out_muxer) {
           time_t now(time(nullptr));
-          int we(0);
+          int we = 0;
           if (should_commit) {
             should_commit = false;
             _next_timeout = now + 1;
@@ -379,8 +374,7 @@ void failover::_run() {
         log_v2::core()->error(
             "big bisou 1 stream {} ? {}", _name, static_cast<bool>(_stream));
       }
-    }
-    catch (...) {
+    } catch (...) {
       logging::error(logging::high)
           << "failover: endpoint '" << _name
           << "' encountered an unknown exception, this is likely a "
@@ -417,8 +411,7 @@ void failover::_run() {
     _update_status("sleeping before reconnection");
 
     for (ssize_t i = 0;
-         !_endpoint->is_ready() && !should_exit() && i < _retry_interval;
-         i++)
+         !_endpoint->is_ready() && !should_exit() && i < _retry_interval; i++)
       std::this_thread::sleep_for(std::chrono::seconds(1));
 
     _update_status("");
@@ -453,14 +446,18 @@ void failover::_run() {
  *
  *  @param[in] secs Buffering timeout in seconds.
  */
-void failover::set_buffering_timeout(time_t secs) { _buffering_timeout = secs; }
+void failover::set_buffering_timeout(time_t secs) {
+  _buffering_timeout = secs;
+}
 
 /**
  *  Set the thread's failover.
  *
  *  @param[in] fo Thread's failover.
  */
-void failover::set_failover(std::shared_ptr<failover> fo) { _failover = fo; }
+void failover::set_failover(std::shared_ptr<failover> fo) {
+  _failover = fo;
+}
 
 /**
  *  Set the connection retry interval.
@@ -475,7 +472,9 @@ void failover::set_retry_interval(time_t retry_interval) {
 /**
  *  Configuration update request.
  */
-void failover::update() { _update = true; }
+void failover::update() {
+  _update = true;
+}
 
 /**
  *  Wait for this thread to terminate along with other failovers.
@@ -593,4 +592,6 @@ void failover::start() {
  *
  *  @return True if bthread should exit.
  */
-bool failover::should_exit() const { return _should_exit; }
+bool failover::should_exit() const {
+  return _should_exit;
+}

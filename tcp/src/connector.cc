@@ -59,20 +59,20 @@ connector::~connector() {}
  *
  * @return The TCP connection object.
  */
-std::shared_ptr<io::stream> connector::open() {
+std::unique_ptr<io::stream> connector::open() {
   // Launch connection process.
   log_v2::tcp()->info("TCP: connecting to {}:{}", _host, _port);
   try {
-    std::shared_ptr<stream> retval =
-        std::make_shared<stream>(_host, _port, _read_timeout);
+    std::unique_ptr<io::stream> retval(new stream(_host, _port, _read_timeout));
     _is_ready_count = 0;
     return retval;
   } catch (const std::exception& e) {
     if (_is_ready_count < 30)
       _is_ready_count++;
-    log_v2::tcp()->debug("Unable to establish the connection to {}:{} (attempt {}): {}",
-                         _host, _port, _is_ready_count, e.what());
-    return std::shared_ptr<stream>();
+    log_v2::tcp()->debug(
+        "Unable to establish the connection to {}:{} (attempt {}): {}", _host,
+        _port, _is_ready_count, e.what());
+    return nullptr;
   }
 }
 

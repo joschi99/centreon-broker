@@ -45,8 +45,8 @@ class connector : public io::endpoint {
   ~connector() = default;
   connector(connector const& right) = delete;
   connector& operator=(connector const& right) = delete;
-  std::shared_ptr<io::stream> open();
-  std::shared_ptr<io::stream> open(std::shared_ptr<io::stream> lower);
+  std::unique_ptr<io::stream> open();
+  std::unique_ptr<io::stream> open(std::shared_ptr<io::stream> lower);
 };
 }  // namespace tls
 

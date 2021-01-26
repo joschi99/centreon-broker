@@ -63,9 +63,9 @@ void connector::connect_to(database_config const& dbcfg,
  *
  *  @return SQL connection object.
  */
-std::shared_ptr<io::stream> connector::open() {
+std::unique_ptr<io::stream> connector::open() {
   log_v2::sql()->trace("sql open connector...");
-  return std::shared_ptr<io::stream>(
-      std::make_shared<stream>(_dbcfg, _cleanup_check_interval, _loop_timeout,
-                               _instance_timeout, _with_state_events));
+  return std::unique_ptr<io::stream>(
+      new stream(_dbcfg, _cleanup_check_interval, _loop_timeout,
+                 _instance_timeout, _with_state_events));
 }

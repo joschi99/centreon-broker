@@ -58,20 +58,20 @@ void acceptor::accept() {
   static uint32_t connection_id = 0;
 
   // Try to accept connection.
-  std::shared_ptr<io::stream> s;
+  std::unique_ptr<io::stream> u;
   try {
-    s = _endp->open();
+    u = _endp->open();
   } catch (const std::exception& e) {
     //FIXME DBR: no try catch initially
     log_v2::core()->error("Fail to open endpoint '{}': {}", _name, e.what());
     throw;
   }
-  if (s) {
+  if (u) {
     // Create feeder thread.
     std::string name(fmt::format("{}-{}", _name, ++connection_id));
     log_v2::core()->info("New incoming connection '{}'", name);
     std::shared_ptr<processing::feeder> f(std::make_shared<processing::feeder>(
-        name, std::unique_ptr<io::stream>(s.release()), _read_filters, _write_filters));
+        name, u, _read_filters, _write_filters));
 
     log_v2::core()->info("accept 1");
     std::lock_guard<std::mutex> lock(_stat_mutex);
@@ -81,8 +81,7 @@ void acceptor::accept() {
     log_v2::core()->trace("Currently {} connections to acceptor '{}'",
                           _feeders.size(), _name);
     log_v2::core()->info("accept 4");
-  }
-  else
+  } else
     log_v2::core()->info("accept failed.");
 }
 
@@ -227,10 +226,15 @@ void acceptor::_callback() noexcept {
       logging::error(logging::high)
           << "acceptor: endpoint '" << _name
           << "' could not accept client: " << e.what();
-      log_v2::core()->error("acceptor: endpoint '{}' could not accept client: {}", _name, e.what());
+      log_v2::core()->error(
+          "acceptor: endpoint '{}' could not accept client: {}", _name,
+          e.what());
 
       // Sleep a while before reconnection.
-      log_v2::core()->debug("acceptor: endpoint '{}' will wait {}s before attempting to accept a new client", _name, _retry_interval);
+      log_v2::core()->debug(
+          "acceptor: endpoint '{}' will wait {}s before attempting to accept a "
+          "new client",
+          _name, _retry_interval);
       time_t limit{time(nullptr) + _retry_interval};
       while (!_endp->is_ready() && !_should_exit && time(nullptr) < limit) {
         std::this_thread::sleep_for(std::chrono::seconds(1));

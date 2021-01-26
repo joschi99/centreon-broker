@@ -53,7 +53,7 @@ class acceptor : public io::endpoint {
 
   void add_child(std::string const& child);
   void listen();
-  std::shared_ptr<io::stream> open() override;
+  std::unique_ptr<io::stream> open() override;
   void remove_child(std::string const& child);
   void stats(json11::Json::object& tree) override;
   bool is_ready() const override;

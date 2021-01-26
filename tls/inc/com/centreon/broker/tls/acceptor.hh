@@ -50,8 +50,8 @@ class acceptor : public io::endpoint {
   ~acceptor() = default;
   acceptor(acceptor const& right) = delete;
   acceptor& operator=(acceptor const&) = delete;
-  std::shared_ptr<io::stream> open();
-  std::shared_ptr<io::stream> open(std::shared_ptr<io::stream> lower);
+  std::unique_ptr<io::stream> open();
+  std::unique_ptr<io::stream> open(std::shared_ptr<io::stream> lower);
 };
 }  // namespace tls
 

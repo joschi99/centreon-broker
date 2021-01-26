@@ -66,7 +66,7 @@ void acceptor::add_child(std::string const& child) {
  *  Start connection acception.
  *
  */
-std::shared_ptr<io::stream> acceptor::open() {
+std::unique_ptr<io::stream> acceptor::open() {
   log_v2::tcp()->debug("tcp::acceptor open...");
   if (!_acceptor) {
     _acceptor = tcp_async::instance().create_acceptor(_port);
@@ -80,9 +80,9 @@ std::shared_ptr<io::stream> acceptor::open() {
     log_v2::tcp()->debug("acceptor gets a new connection from {}:{}",
                          conn->socket().remote_endpoint().address().to_string(),
                          conn->socket().remote_endpoint().port());
-    return std::make_shared<stream>(conn, -1);
+    return std::unique_ptr<stream>(new stream(conn, -1));
   }
-  return std::shared_ptr<stream>();
+  return nullptr;
 }
 
 bool acceptor::is_ready() const {

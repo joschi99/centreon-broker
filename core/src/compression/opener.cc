@@ -47,7 +47,7 @@ opener::~opener() noexcept {}
  *  @return New compression object.
  */
 std::unique_ptr<io::stream> opener::open() {
-  std::shared_ptr<io::stream> retval;
+  std::unique_ptr<io::stream> retval;
   if (_from)
     retval = _open(_from->open());
   return retval;
@@ -77,8 +77,8 @@ void opener::set_size(uint32_t size) {
  *
  *  @return New compression object.
  */
-std::shared_ptr<io::stream> opener::_open(std::shared_ptr<io::stream> base) {
-  std::shared_ptr<io::stream> retval;
+std::unique_ptr<io::stream> opener::_open(std::shared_ptr<io::stream> base) {
+  std::unique_ptr<io::stream> retval;
   if (base) {
     retval.reset(new stream(_level, _size));
     retval->set_substream(base);

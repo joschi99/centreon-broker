@@ -46,7 +46,7 @@ class connector : public io::endpoint {
   std::unique_ptr<io::stream> open();
 
  private:
-  std::shared_ptr<io::stream> _open(std::shared_ptr<io::stream> stream);
+  std::unique_ptr<io::stream> _open(std::shared_ptr<io::stream> stream);
 
   bool _coarse;
   std::pair<std::string, std::string> _extensions;

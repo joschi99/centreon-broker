@@ -42,7 +42,7 @@ class opener : public io::endpoint {
   void set_size(uint32_t size = 0);
 
  private:
-  std::shared_ptr<io::stream> _open(std::shared_ptr<io::stream> stream);
+  std::unique_ptr<io::stream> _open(std::shared_ptr<io::stream> stream);
 
   int _level;
   uint32_t _size;

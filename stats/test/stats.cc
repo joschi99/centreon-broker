@@ -130,12 +130,11 @@ class st : public io::stream {
 class endp : public io::endpoint {
  public:
   endp() : io::endpoint{false} {}
-  std::shared_ptr<io::stream> open() override {
+  std::unique_ptr<io::stream> open() override {
     static int count = 0;
-    std::shared_ptr<st> retval;
     if (++count < 2)
-      retval = std::make_shared<st>();
-    return retval;
+      return std::unique_ptr<io::stream>(new st);
+    return nullptr;
   };
 };
 

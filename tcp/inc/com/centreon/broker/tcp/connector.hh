@@ -50,7 +50,7 @@ class connector : public io::endpoint {
   connector& operator=(connector const& other) = delete;
   connector(connector const& other) = delete;
 
-  std::shared_ptr<io::stream> open();
+  std::unique_ptr<io::stream> open();
   bool is_ready() const;
 };
 }  // namespace tcp

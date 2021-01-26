@@ -90,16 +90,16 @@ void connector::connect_reporting(database_config const& db_cfg) {
  *
  * @return BAM connection object.
  */
-std::shared_ptr<io::stream> connector::open() {
+std::unique_ptr<io::stream> connector::open() {
   if (_type == bam_reporting_type)
-    return std::make_shared<reporting_stream>(_db_cfg);
+    return std::unique_ptr<io::stream>(new reporting_stream(_db_cfg));
   else {
     database_config storage_db_cfg(_db_cfg);
     storage_db_cfg.set_name(_storage_db_name);
-    auto s = std::make_shared<monitoring_stream>(_ext_cmd_file, _db_cfg,
-                                                 storage_db_cfg, _cache);
-    s->initialize();
-    return s;
+    auto u =
+        new monitoring_stream(_ext_cmd_file, _db_cfg, storage_db_cfg, _cache);
+    u->initialize();
+    return std::unique_ptr<io::stream>(u);
   }
 }
 

@@ -40,16 +40,16 @@ using namespace com::centreon::broker::processing;
  *  @param[in] read_filters   Read filters.
  *  @param[in] write_filters  Write filters.
  */
-feeder::feeder(std::string const& name,
-               std::unique_ptr<io::stream> client,
-               std::unordered_set<uint32_t> const& read_filters,
-               std::unordered_set<uint32_t> const& write_filters)
+feeder::feeder(const std::string& name,
+               std::unique_ptr<io::stream>& client,
+               const std::unordered_set<uint32_t>& read_filters,
+               const std::unordered_set<uint32_t>& write_filters)
     : stat_visitable(name),
       _state{feeder::stopped},
       _should_exit{false},
       _client(std::move(client)),
       _subscriber(name, false) {
-  if (!client)
+  if (!_client)
     throw msg_fmt("could not process '{}' with no client stream", _name);
 
   _subscriber.get_muxer().set_read_filters(read_filters);

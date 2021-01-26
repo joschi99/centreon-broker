@@ -50,7 +50,7 @@ class connector : public io::endpoint {
                   uint32_t interval_length,
                   uint32_t rebuild_check_interval,
                   bool store_in_data_bin = true);
-  std::shared_ptr<io::stream> open();
+  std::unique_ptr<io::stream> open();
 };
 }  // namespace storage
 
