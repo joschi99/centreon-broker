@@ -19,11 +19,8 @@
 #include "com/centreon/broker/config/applier/init.hh"
 #include <cstdlib>
 #include <memory>
-#include "com/centreon/broker/bbdo/internal.hh"
-#include "com/centreon/broker/compression/internal.hh"
 #include "com/centreon/broker/config/applier/endpoint.hh"
 #include "com/centreon/broker/config/applier/state.hh"
-#include "com/centreon/broker/instance_broadcast.hh"
 #include "com/centreon/broker/io/events.hh"
 #include "com/centreon/broker/io/protocols.hh"
 #include "com/centreon/broker/log_v2.hh"
@@ -54,11 +51,8 @@ void config::applier::init(size_t n_thread, const std::string& name) {
   stats::center::load();
   config::applier::state::load();
   multiplexing::engine::load();
-  io::events::load();
   io::protocols::load();
-  instance_broadcast::load();
-  compression::load();
-  bbdo::load();
+  io::events::load();
   config::applier::endpoint::load();
   mode = initialized;
 }
@@ -71,17 +65,15 @@ void config::applier::deinit() {
   mode = finished;
   config::applier::endpoint::unload();
   log_v2::core()->error("config::applier::deinit 2");
-  bbdo::unload();
-  log_v2::core()->error("config::applier::deinit 3");
-  compression::unload();
-  log_v2::core()->error("config::applier::deinit 4");
-  log_v2::core()->error("config::applier::deinit 5");
   multiplexing::engine::instance().clear();
+  log_v2::core()->error("config::applier::deinit 3");
   multiplexing::engine::unload();
-  log_v2::core()->error("config::applier::deinit 6");
+  log_v2::core()->error("config::applier::deinit 4");
   config::applier::state::unload();
-  io::protocols::unload();
+  log_v2::core()->error("config::applier::deinit 5");
   io::events::unload();
+  log_v2::core()->error("config::applier::deinit 6");
+  io::protocols::unload();
   stats::center::unload();
   pool::unload();
 }

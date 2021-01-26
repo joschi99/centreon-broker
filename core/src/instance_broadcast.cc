@@ -76,12 +76,6 @@ void instance_broadcast::load() {
                    instance_broadcast::entries);
 }
 
-/**************************************
- *                                     *
- *           Private Methods           *
- *                                     *
- **************************************/
-
 /**
  *  Copy internal data members.
  *

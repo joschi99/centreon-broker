@@ -20,7 +20,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <memory>
-#include "com/centreon/broker/logging/logging.hh"
+#include "com/centreon/broker/compression/factory.hh"
 #include "com/centreon/broker/file/factory.hh"
 #include "com/centreon/broker/log_v2.hh"
 
@@ -87,7 +87,8 @@ void protocols::reg(std::string const& name,
   p.osi_to = osi_to;
 
   // Register protocol in protocol list.
-  log_v2::core()->info("protocols: registering protocol ({}' (layers {}-{})", name, osi_from, osi_to);
+  log_v2::core()->info("protocols: registering protocol ({}' (layers {}-{})",
+                       name, osi_from, osi_to);
   _protocols[name] = p;
 }
 
@@ -105,8 +106,7 @@ void protocols::unload() {
  *  @param[in] name Protocol name.
  */
 void protocols::unreg(std::string const& name) {
-  logging::info(logging::low) << "protocols: unregistering protocol '" << name
-                              << "'";
+  log_v2::core()->info("protocols: unregistering protocol '{}'", name);
   _protocols.erase(name);
 }
 
@@ -116,6 +116,7 @@ void protocols::unreg(std::string const& name) {
 protocols::protocols() {
   // Registering internal protocols
   reg("file", std::make_shared<file::factory>(), 1, 3);
+  reg("compression", std::make_shared<compression::factory>(), 6, 6);
 }
 
 /**
@@ -123,7 +124,8 @@ protocols::protocols() {
  */
 protocols::~protocols() {
   // Unregistering internal protocols
+  unreg("compression");
   unreg("file");
   log_v2::core()->info("protocols: destruction ({} protocols still registered)",
-      _protocols.size());
+                       _protocols.size());
 }

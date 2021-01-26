@@ -48,19 +48,19 @@ class StatsTest : public ::testing::Test {
   void SetUp() override {
     pool::load(0);
     stats::center::load();
-    multiplexing::engine::load();
     config::applier::state::load();
-    config::applier::endpoint::load();
-    io::events::load();
+    multiplexing::engine::load();
     io::protocols::load();
+    io::events::load();
+    config::applier::endpoint::load();
   }
 
   void TearDown() override {
     config::applier::endpoint::unload();
-    config::applier::state::load();
-    io::protocols::unload();
     io::events::unload();
+    io::protocols::unload();
     multiplexing::engine::unload();
+    config::applier::state::load();
     stats::center::unload();
     pool::unload();
   }
