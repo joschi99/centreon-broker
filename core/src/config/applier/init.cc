@@ -61,21 +61,16 @@ void config::applier::init(size_t n_thread, const std::string& name) {
  *  Unload necessary structures.
  */
 void config::applier::deinit() {
-  log_v2::core()->error("config::applier::deinit 1");
   mode = finished;
   config::applier::endpoint::unload();
-  log_v2::core()->error("config::applier::deinit 2");
   multiplexing::engine::instance().clear();
-  log_v2::core()->error("config::applier::deinit 3");
   multiplexing::engine::unload();
-  log_v2::core()->error("config::applier::deinit 4");
   config::applier::state::unload();
-  log_v2::core()->error("config::applier::deinit 5");
   io::events::unload();
-  log_v2::core()->error("config::applier::deinit 6");
   io::protocols::unload();
   stats::center::unload();
   pool::unload();
+  log_v2::core()->error("Configuration unloaded.");
 }
 
 /**
