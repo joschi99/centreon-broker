@@ -216,16 +216,11 @@ void endpoint::_discard() {
     // Send termination requests.
     for (auto it = _endpoints.begin(), end = _endpoints.end(); it != end;
          ++it) {
-      log_v2::config()->debug("endpoint applier: destruction 1 {}",
-                              it->second->get_name());
       log_v2::config()->trace(
           "endpoint applier: send exit signal on endpoint '{}'",
           it->second->get_name());
       delete it->second;
-      log_v2::config()->debug("endpoint applier: destruction 1 {} DONE",
-                              it->second->get_name());
     }
-    log_v2::config()->debug("endpoint applier: destruction 2");
 
     log_v2::config()->debug("endpoint applier: all threads are terminated");
     _endpoints.clear();
