@@ -197,8 +197,10 @@ void rebuilder::_run(asio::error_code ec) {
         _next_index_to_rebuild(info, ms);
       }
     } catch (std::exception const& e) {
+      log_v2::sql()->error("Unable to connect to the database: {}", e.what());
       logging::error(logging::high) << e.what();
     } catch (...) {
+      log_v2::sql()->error("Unable to connect to the database: unknown error");
       logging::error(logging::high) << "storage: rebuilder: unknown error";
     }
     if (!_should_exit) {

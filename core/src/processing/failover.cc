@@ -371,8 +371,6 @@ void failover::_run() {
       if (!should_exit()) {
         _launch_failover();
         _initialized = true;
-        log_v2::core()->error(
-            "big bisou 1 stream {} ? {}", _name, static_cast<bool>(_stream));
       }
     } catch (...) {
       logging::error(logging::high)
@@ -398,7 +396,6 @@ void failover::_run() {
       std::lock_guard<std::timed_mutex> stream_lock(_stream_m);
 
       if (_stream) {
-        log_v2::core()->error("big bisou 2 {}", _name);
         // If ack_events is not zero, then we will store data twice
         int32_t ack_events = _stream->stop();
         _subscriber->get_muxer().ack_events(ack_events);

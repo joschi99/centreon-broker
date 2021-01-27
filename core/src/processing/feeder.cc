@@ -218,6 +218,8 @@ void feeder::_callback() noexcept {
   _state_cv.notify_all();
   lock_stop.unlock();
 
+  int32_t ack_events = _client->stop();
+  log_v2::core()->info("feeder: ack events after stop {}", ack_events);
   {
     misc::read_lock lock(_client_m);
     _client.reset();

@@ -59,13 +59,7 @@ void acceptor::accept() {
 
   // Try to accept connection.
   std::unique_ptr<io::stream> u;
-  try {
-    u = _endp->open();
-  } catch (const std::exception& e) {
-    //FIXME DBR: no try catch initially
-    log_v2::core()->error("Fail to open endpoint '{}': {}", _name, e.what());
-    throw;
-  }
+  u = _endp->open();
   if (u) {
     // Create feeder thread.
     std::string name(fmt::format("{}-{}", _name, ++connection_id));
