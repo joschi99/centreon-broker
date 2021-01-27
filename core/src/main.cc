@@ -315,8 +315,6 @@ int main(int argc, char* argv[]) {
         }
         log_v2::core()->info("main: termination request received by process");
       }
-      // Unload endpoints.
-      config::applier::deinit();
     }
 
     // Unload endpoints.
