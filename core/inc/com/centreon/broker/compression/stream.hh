@@ -41,7 +41,8 @@ class stream : public io::stream {
   ~stream() noexcept;
   stream(const stream&) = delete;
   stream& operator=(const stream&) = delete;
-  int flush();
+  int flush() override;
+  int stop() override;
   bool read(std::shared_ptr<io::data>& d, time_t deadline = (time_t)-1);
   void statistics(json11::Json::object& tree) const override;
   int write(std::shared_ptr<io::data> const& d);

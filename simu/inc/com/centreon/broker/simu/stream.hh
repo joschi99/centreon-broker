@@ -48,6 +48,7 @@ class stream : public io::stream {
   stream& operator=(stream const& other) = delete;
   stream(stream const& other) = delete;
   int write(std::shared_ptr<io::data> const& d);
+  int32_t stop() override { return 0; }
 };
 }  // namespace simu
 

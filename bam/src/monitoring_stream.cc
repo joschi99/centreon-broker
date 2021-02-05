@@ -108,10 +108,17 @@ monitoring_stream::~monitoring_stream() {
  *
  *  @return Number of acknowledged events.
  */
-int monitoring_stream::flush() {
+int32_t monitoring_stream::flush() {
   _mysql.commit();
   int retval = _pending_events;
   _pending_events = 0;
+  return retval;
+}
+
+int32_t monitoring_stream::stop() {
+  int32_t retval = flush();
+  log_v2::core()->info("monitoring_stream stopped with {} events acknowledged",
+      retval);
   return retval;
 }
 

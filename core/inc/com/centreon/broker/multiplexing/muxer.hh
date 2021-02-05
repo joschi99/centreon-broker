@@ -65,8 +65,8 @@ class muxer : public io::stream {
 
  public:
   muxer(std::string const& name, bool persistent = false);
-  muxer(muxer const& other) = delete;
-  muxer& operator=(muxer const& other) = delete;
+  muxer(muxer const&) = delete;
+  muxer& operator=(muxer const&) = delete;
   ~muxer() noexcept;
   void ack_events(int count);
   static void event_queue_max_size(uint32_t max) noexcept;
@@ -84,7 +84,8 @@ class muxer : public io::stream {
   void remove_queue_files();
   void statistics(json11::Json::object& tree) const override;
   void wake();
-  int write(std::shared_ptr<io::data> const& d);
+  int32_t write(std::shared_ptr<io::data> const& d) override;
+  int32_t stop() override;
 
   static std::string memory_file(std::string const& name);
   static std::string queue_file(std::string const& name);

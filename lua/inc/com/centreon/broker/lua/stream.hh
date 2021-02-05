@@ -95,13 +95,13 @@ class stream : public io::stream {
   stream(std::string const& lua_script,
          std::map<std::string, misc::variant> const& conf_params,
          std::shared_ptr<persistent_cache> const& cache);
-  stream& operator=(stream const& other) = delete;
-  stream(stream const& other) = delete;
+  stream& operator=(stream const&) = delete;
+  stream(stream const&) = delete;
   ~stream();
   bool read(std::shared_ptr<io::data>& d, time_t deadline) override;
   int write(std::shared_ptr<io::data> const& d) override;
-  //  bool filter(uint32_t type);
-  int flush() override;
+  int32_t flush() override;
+  int32_t stop() override;
   bool stats_mean_square(double& a, double& b) const noexcept;
   void statistics(json11::Json::object& tree) const override;
 };

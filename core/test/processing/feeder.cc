@@ -36,6 +36,7 @@ class TestStream : public io::stream {
   bool read(std::shared_ptr<io::data>&, time_t) { return true; }
 
   int write(std::shared_ptr<io::data> const&) { return 1; }
+  int32_t stop() override { return 0; }
 };
 
 class TestFeeder : public ::testing::Test {

@@ -28,17 +28,12 @@
 #include "com/centreon/broker/storage/internal.hh"
 #include "com/centreon/broker/storage/metric.hh"
 #include "com/centreon/exceptions/msg_fmt.hh"
+#include "com/centreon/broker/log_v2.hh"
 
 using namespace asio;
 using namespace com::centreon::exceptions;
 using namespace com::centreon::broker;
 using namespace com::centreon::broker::graphite;
-
-/**************************************
- *                                     *
- *           Public Methods            *
- *                                     *
- **************************************/
 
 /**
  *  Constructor.
@@ -122,16 +117,23 @@ stream::~stream() {}
  *
  *  @return Number of events acknowledged.
  */
-int stream::flush() {
+int32_t stream::flush() {
   logging::debug(logging::medium)
       << "graphite: commiting " << _actual_query << " queries";
-  int ret(_pending_queries);
+  int32_t ret(_pending_queries);
   if (_actual_query != 0)
     _commit();
   _actual_query = 0;
   _pending_queries = 0;
   _commit_flag = false;
   return ret;
+}
+
+int32_t stream::stop() {
+  int32_t retval = flush();
+  log_v2::core()->info("graphite stopped with {} events acknowledged",
+      retval);
+  return retval;
 }
 
 /**
@@ -194,12 +196,6 @@ int stream::write(std::shared_ptr<io::data> const& data) {
   else
     return 0;
 }
-
-/**************************************
- *                                     *
- *           Private Methods           *
- *                                     *
- **************************************/
 
 /**
  *  Process a metric event.

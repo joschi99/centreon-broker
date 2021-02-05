@@ -125,6 +125,7 @@ class st : public io::stream {
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     return 1;
   }
+  int32_t stop() override { return 0; }
 };
 
 class endp : public io::endpoint {

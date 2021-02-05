@@ -22,6 +22,7 @@
 #include "com/centreon/broker/compression/stream.hh"
 #include "com/centreon/broker/file/opener.hh"
 #include "com/centreon/broker/file/stream.hh"
+#include "com/centreon/broker/log_v2.hh"
 
 using namespace com::centreon::broker;
 
@@ -86,6 +87,13 @@ void persistent_file::statistics(json11::Json::object& tree) const {
  */
 int persistent_file::write(std::shared_ptr<io::data> const& d) {
   return _substream->write(d);
+}
+
+int32_t persistent_file::stop() {
+  int32_t retval = _substream->stop();
+  log_v2::core()->info("persistent_file stopped with {} events acknowledged",
+      retval);
+  return retval;
 }
 
 /**

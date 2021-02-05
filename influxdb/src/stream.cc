@@ -26,6 +26,7 @@
 #include "com/centreon/broker/multiplexing/publisher.hh"
 #include "com/centreon/broker/storage/internal.hh"
 #include "com/centreon/broker/storage/metric.hh"
+#include "com/centreon/broker/log_v2.hh"
 
 using namespace com::centreon::broker;
 using namespace com::centreon::broker::influxdb;
@@ -79,6 +80,13 @@ int stream::flush() {
   _influx_db->commit();
   _commit = false;
   return ret;
+}
+
+int32_t stream::stop() {
+  int32_t retval = flush();
+  log_v2::core()->info("influxdb stream stopped with {} events acknowledged",
+      retval);
+  return retval;
 }
 
 /**

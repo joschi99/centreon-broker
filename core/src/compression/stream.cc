@@ -194,6 +194,11 @@ int stream::flush() {
   return 0;
 }
 
+int stream::stop() {
+  _flush();
+  return 0;
+}
+
 /**
  *  @brief Write data.
  *

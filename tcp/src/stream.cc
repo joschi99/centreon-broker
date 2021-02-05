@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 - 2020 Centreon (https://www.centreon.com/)
+ * Copyright 2011 - 2021 Centreon (https://www.centreon.com/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -153,6 +153,8 @@ bool stream::read(std::shared_ptr<io::data>& d, time_t deadline) {
 void stream::set_parent(acceptor* parent) { _parent = parent; }
 
 int32_t stream::flush() { return _connection->flush(); }
+
+int32_t stream::stop() { return flush(); }
 
 /**
  *  Write data to the socket.

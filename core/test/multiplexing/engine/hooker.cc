@@ -94,3 +94,7 @@ int hooker::write(std::shared_ptr<io::data> const& d) {
     throw msg_fmt("hooker test object is shutdown");
   return 1;
 }
+
+int32_t hooker::stop() {
+  return 0;
+}

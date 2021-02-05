@@ -364,6 +364,7 @@ void conflict_manager::_load_caches() {
         info.max = res.value_as_f32(11);
         info.value = res.value_as_f32(12);
         info.type = res.value_as_str(13)[0] - '0';
+        info.metric_mapping_sent = false;
         _metric_cache[{res.value_as_u32(1), res.value_as_str(2)}] = info;
       }
     } catch (std::exception const& e) {
@@ -387,7 +388,11 @@ void conflict_manager::update_metric_info_cache(uint32_t index_id,
         perfdata::data_type_name[metric_type]);
     std::lock_guard<std::mutex> lock(_metric_cache_m);
     it->second.type = metric_type;
-    it->second.metric_id = metric_id;
+    if (it->second.metric_id != metric_id) {
+      it->second.metric_id = metric_id;
+      // We need to repopulate a new metric_mapping
+      it->second.metric_mapping_sent = false;
+    }
   }
 }
 
@@ -414,7 +419,7 @@ void conflict_manager::_callback() {
       break;
     }
     size_t pos = 0;
-    std::deque<std::tuple<std::shared_ptr<io::data>, uint32_t, bool*> > events;
+    std::deque<std::tuple<std::shared_ptr<io::data>, uint32_t, bool*>> events;
     try {
       while (!_should_exit()) {
         /* Time to send perfdatas to rrd ; no lock needed, it is this thread

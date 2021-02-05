@@ -45,7 +45,8 @@ class persistent_file : public io::stream {
             time_t deadline = (time_t)-1) override;
   void remove_all_files();
   void statistics(json11::Json::object& tree) const override;
-  int write(std::shared_ptr<io::data> const& d) override;
+  int32_t write(std::shared_ptr<io::data> const& d) override;
+  int32_t stop() override;
 };
 
 CCB_END()

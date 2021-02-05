@@ -78,3 +78,7 @@ int publisher::write(const std::list<std::shared_ptr<io::data>>& to_publish) {
   engine::instance().publish(to_publish);
   return to_publish.size();
 }
+
+int32_t publisher::stop() {
+  return 0;
+}

@@ -43,9 +43,10 @@ class publisher : public io::stream {
   ~publisher() noexcept = default;
   publisher(const publisher&) = delete;
   publisher& operator=(const publisher&) = delete;
-  bool read(std::shared_ptr<io::data>& d, time_t deadline = (time_t)-1);
-  int write(std::shared_ptr<io::data> const& d);
-  int write(std::list<std::shared_ptr<io::data>> const& to_publish);
+  bool read(std::shared_ptr<io::data>& d, time_t deadline = (time_t)-1) override;
+  int write(const std::shared_ptr<io::data>& d) override;
+  int write(const std::list<std::shared_ptr<io::data>>& to_publish);
+  int32_t stop() override;
 };
 }  // namespace multiplexing
 

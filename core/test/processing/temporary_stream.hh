@@ -82,6 +82,8 @@ class temporary_stream : public io::stream {
     _events.push(d);
     return 1;
   }
+
+  int32_t stop() override { return 0; }
 };
 
 CCB_END()
