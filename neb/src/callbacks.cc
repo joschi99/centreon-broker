@@ -1909,17 +1909,24 @@ int neb::callback_service(int callback_type, void* data) {
  *  @return 0 on success.
  */
 int neb::callback_service_check(int callback_type, void* data) {
+
+  nebstruct_service_check_data const* scdata =
+    static_cast<nebstruct_service_check_data*>(data);
+
+  /* Broker does not need to receive three times the same event. It keeps very
+   * few things from this message */
+  if (scdata->type != NEBTYPE_SERVICECHECK_INITIATE)
+    return 0;
+
   // Log message.
   logging::info(logging::medium) << "callbacks: generating service check event";
   (void)callback_type;
 
   try {
     // In/Out variables.
-    nebstruct_service_check_data const* scdata;
     std::shared_ptr<neb::service_check> service_check(std::make_shared<neb::service_check>());
 
     // Fill output var.
-    scdata = static_cast<nebstruct_service_check_data*>(data);
     engine::service* s{static_cast<engine::service*>(scdata->object_ptr)};
     if (scdata->command_line) {
       service_check->active_checks_enabled = s->get_checks_enabled();
