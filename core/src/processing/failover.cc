@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2017 Centreon
+** Copyright 2011-2017,2021 Centreon
 **
 ** Licensed under the Apache License, Version 2.0 (the "License");
 ** you may not use this file except in compliance with the License.
@@ -31,12 +31,6 @@ using namespace com::centreon::exceptions;
 using namespace com::centreon::broker;
 using namespace com::centreon::broker::processing;
 
-/**************************************
- *                                     *
- *           Public Methods            *
- *                                     *
- **************************************/
-
 /**
  *  Constructor.
  *
@@ -47,7 +41,7 @@ using namespace com::centreon::broker::processing;
 failover::failover(std::shared_ptr<io::endpoint> endp,
                    std::shared_ptr<multiplexing::subscriber> sbscrbr,
                    std::string const& name)
-    : endpoint(name),
+    : endpoint(false, name),
       _should_exit(false),
       _started(false),
       _stopped{false},

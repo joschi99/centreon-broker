@@ -26,8 +26,12 @@ CCB_BEGIN()
 
 namespace processing {
 class endpoint : public stat_visitable {
+  const bool _is_feeder;
+
  public:
-  endpoint(const std::string& name) : stat_visitable(name) {}
+  endpoint(bool is_feeder, const std::string& name)
+      : stat_visitable(name), _is_feeder{is_feeder} {}
+  bool is_feeder() const { return _is_feeder; }
   virtual ~endpoint() noexcept {}
   virtual void update() {}
   virtual void start() = 0;
