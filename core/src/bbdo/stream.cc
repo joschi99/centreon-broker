@@ -509,10 +509,16 @@ stream::stream()
  */
 int32_t stream::stop() {
   _substream->stop();
-  int retval = _acknowledged_events;
-  _acknowledged_events -= retval;
-  log_v2::core()->info("bbdo stream stopped with {} events acknowledged",
-      retval);
+
+  /* We acknowledge peer about received events. */
+  log_v2::core()->debug("bbdo stream stopped with {} events acknowledged",
+                       _events_received_since_last_ack);
+  if (_events_received_since_last_ack)
+    send_event_acknowledgement();
+
+  /* We return the number of events handled by our stream. */
+  int32_t retval = _acknowledged_events;
+  _acknowledged_events = 0;
   return retval;
 }
 
@@ -1075,6 +1081,8 @@ void stream::acknowledge_events(uint32_t events) {
  */
 void stream::send_event_acknowledgement() {
   if (!_coarse) {
+    log_v2::core()->debug("send acknowledgement for {} events",
+                          _events_received_since_last_ack);
     std::shared_ptr<ack> acknowledgement(
         std::make_shared<ack>(_events_received_since_last_ack));
     _write(acknowledgement);
