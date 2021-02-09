@@ -29,9 +29,9 @@
 
 #include "com/centreon/broker/config/applier/state.hh"
 #include "com/centreon/broker/io/events.hh"
+#include "com/centreon/broker/log_v2.hh"
 #include "com/centreon/broker/logging/logging.hh"
 #include "com/centreon/broker/multiplexing/muxer.hh"
-#include "com/centreon/broker/log_v2.hh"
 
 using namespace com::centreon::broker;
 using namespace com::centreon::broker::multiplexing;
@@ -46,6 +46,7 @@ std::mutex engine::_load_m;
  *  Clear events stored in the multiplexing engine.
  */
 void engine::clear() {
+  log_v2::core()->info("engine queue empty now");
   while (!_kiew.empty())
     _kiew.pop();
 }
@@ -121,8 +122,8 @@ void engine::start() {
     // Set writing method.
     logging::debug(logging::high) << "multiplexing: starting";
     _write_func = &engine::_write;
-    stats::center::instance().update(
-        &EngineStats::set_mode, _stats, EngineStats::WRITE);
+    stats::center::instance().update(&EngineStats::set_mode, _stats,
+                                     EngineStats::WRITE);
 
     std::lock_guard<std::mutex> lock(_engine_m);
     // Local queue.
@@ -137,8 +138,7 @@ void engine::start() {
           break;
         kiew.push(d);
       }
-    }
-    catch (std::exception const& e) {
+    } catch (std::exception const& e) {
       logging::error(logging::medium)
           << "multiplexing: couldn't read cache file: " << e.what();
     }
@@ -152,8 +152,7 @@ void engine::start() {
     // Notify hooks of multiplexing loop start.
     for (std::vector<std::pair<hooker*, bool> >::iterator it(_hooks_begin),
          end(_hooks_end);
-         it != end;
-         ++it) {
+         it != end; ++it) {
       it->first->starting();
 
       // Read events from hook.
@@ -164,10 +163,9 @@ void engine::start() {
           _kiew.push(d);
           it->first->read(d, 0);
         }
-      }
-      catch (std::exception const& e) {
-        logging::error(logging::low) << "multiplexing: cannot read from hook: "
-                                     << e.what();
+      } catch (std::exception const& e) {
+        logging::error(logging::low)
+            << "multiplexing: cannot read from hook: " << e.what();
       }
     }
 
@@ -192,8 +190,7 @@ void engine::stop() {
     std::unique_lock<std::mutex> lock(_engine_m);
     for (std::vector<std::pair<hooker*, bool> >::iterator it(_hooks_begin),
          end(_hooks_end);
-         it != end;
-         ++it) {
+         it != end; ++it) {
       it->first->stopping();
 
       // Read events from hook.
@@ -204,8 +201,7 @@ void engine::stop() {
           _kiew.push(d);
           it->first->read(d);
         }
-      }
-      catch (...) {
+      } catch (...) {
       }
     }
 
@@ -214,7 +210,7 @@ void engine::stop() {
       // Process events from hooks.
       _send_to_subscribers();
 
-      // Make sur that no more data is available.
+      // Make sure that no more data is available.
       lock.unlock();
       usleep(200000);
       lock.lock();
@@ -228,8 +224,7 @@ void engine::stop() {
     try {
       _cache_file.reset(new persistent_cache(_cache_file_path()));
       _cache_file->transaction();
-    }
-    catch (std::exception const& e) {
+    } catch (std::exception const& e) {
       logging::error(logging::medium)
           << "multiplexing: could not open cache file: " << e.what();
       _cache_file.reset();
@@ -238,8 +233,8 @@ void engine::stop() {
     log_v2::core()->debug("multiplexing: stopping 2");
     // Set writing method.
     _write_func = &engine::_write_to_cache_file;
-    stats::center::instance().update(
-        &EngineStats::set_mode, _stats, EngineStats::WRITE_TO_CACHE_FILE);
+    stats::center::instance().update(&EngineStats::set_mode, _stats,
+                                     EngineStats::WRITE_TO_CACHE_FILE);
     log_v2::core()->debug("multiplexing: stopping 3");
   }
 }
@@ -320,8 +315,8 @@ engine::engine()
       _stats{stats::center::instance().register_engine()},
       _unprocessed_events{0u},
       _write_func(&engine::_nop) {
-  stats::center::instance().update(
-      &EngineStats::set_mode, _stats, EngineStats::NOP);
+  stats::center::instance().update(&EngineStats::set_mode, _stats,
+                                   EngineStats::NOP);
 }
 
 /**
@@ -340,7 +335,9 @@ std::string engine::_cache_file_path() const {
  *
  *  @param[in] d  Unused.
  */
-void engine::_nop(std::shared_ptr<io::data> const& d) { (void)d; }
+void engine::_nop(std::shared_ptr<io::data> const& d) {
+  (void)d;
+}
 
 /**
  *  Send queued events to subscribers.
@@ -367,8 +364,7 @@ void engine::_write(std::shared_ptr<io::data> const& e) {
   // Send object to every hook.
   for (std::vector<std::pair<hooker*, bool> >::iterator it(_hooks_begin),
        end(_hooks_end);
-       it != end;
-       ++it)
+       it != end; ++it)
     if (it->second) {
       it->first->write(e);
       std::shared_ptr<io::data> d;
@@ -394,8 +390,7 @@ void engine::_write_to_cache_file(std::shared_ptr<io::data> const& d) {
     if (_cache_file)
       _cache_file->add(d);
     _unprocessed_events++;
-  }
-  catch (std::exception const& e) {
+  } catch (std::exception const& e) {
     logging::error(logging::medium)
         << "multiplexing: could not write to cache file: " << e.what();
   }
