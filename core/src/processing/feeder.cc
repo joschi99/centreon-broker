@@ -68,6 +68,7 @@ feeder::feeder(const std::string& name,
  *  Destructor.
  */
 feeder::~feeder() {
+  log_v2::processing()->trace("feeder: destruction");
   std::unique_lock<std::mutex> lock(_state_m);
   switch (_state) {
     case stopped:
@@ -82,6 +83,7 @@ feeder::~feeder() {
       _thread.join();
       break;
   }
+  log_v2::processing()->trace("feeder: destroyed");
 }
 
 bool feeder::is_finished() const noexcept {
@@ -218,8 +220,10 @@ void feeder::_callback() noexcept {
   _state_cv.notify_all();
   lock_stop.unlock();
 
-  int32_t ack_events = _client->stop();
-  log_v2::core()->info("feeder: ack events after stop {}", ack_events);
+  /* We don't get back the return value of stop() because it has non sense,
+   * the only interest in calling stop() is to send an acknowledgement to the
+   * peer. */
+  _client->stop();
   {
     misc::read_lock lock(_client_m);
     _client.reset();
