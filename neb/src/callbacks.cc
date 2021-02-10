@@ -1242,17 +1242,25 @@ int neb::callback_host(int callback_type, void* data) {
  *  @return 0 on success.
  */
 int neb::callback_host_check(int callback_type, void* data) {
-  // Log message.
-  logging::info(logging::medium) << "callbacks: generating host check event";
   (void)callback_type;
 
+  // In/Out variables.
+  nebstruct_host_check_data const* hcdata =
+    static_cast<nebstruct_host_check_data*>(data);
+
+  /* For each check, this event is received three times one precheck, one
+   * initiate and one processed. We just keep the initiate one. At the processed
+   * one we also received the host status. */
+  if (hcdata->type != NEBTYPE_HOSTCHECK_INITIATE)
+    return 0;
+
+  // Log message.
+  logging::info(logging::medium) << "callbacks: generating host check event";
+
   try {
-    // In/Out variables.
-    nebstruct_host_check_data const* hcdata;
     std::shared_ptr<neb::host_check> host_check(new neb::host_check);
 
     // Fill output var.
-    hcdata = static_cast<nebstruct_host_check_data*>(data);
     engine::host* h(static_cast<engine::host*>(hcdata->object_ptr));
     if (hcdata->command_line) {
       host_check->active_checks_enabled = h->get_checks_enabled();
@@ -1913,8 +1921,9 @@ int neb::callback_service_check(int callback_type, void* data) {
   nebstruct_service_check_data const* scdata =
     static_cast<nebstruct_service_check_data*>(data);
 
-  /* Broker does not need to receive three times the same event. It keeps very
-   * few things from this message */
+  /* For each check, this event is received three times one precheck, one
+   * initiate and one processed. We just keep the initiate one. At the processed
+   * one we also received the service status. */
   if (scdata->type != NEBTYPE_SERVICECHECK_INITIATE)
     return 0;
 
