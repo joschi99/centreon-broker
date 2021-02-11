@@ -53,7 +53,7 @@ class stream : public io::stream {
   ~stream() noexcept;
   stream& operator=(const stream&) = delete;
   stream(const stream&) = delete;
-  std::string peer() const override;
+  std::string peer() const override final;
   bool read(std::shared_ptr<io::data>& d, time_t deadline) override;
   void set_parent(acceptor* parent);
   int32_t flush() override;

@@ -506,7 +506,7 @@ static time_t calculate_time_from_weekday_of_month(int year,
   t.tm_mon = month;
   t.tm_mday = 1;
   t.tm_isdst = -1;
-  time_t midnight(mktime(&t));
+  time_t midnight{mktime(&t)};
 
   // How many days must we advance to reach the first instance of the
   // weekday this month ?
@@ -561,7 +561,7 @@ static time_t calculate_time_from_weekday_of_month(int year,
     midnight = mktime(&t);
   }
 
-  return (midnight);
+  return midnight;
 }
 
 // TO TIME_T

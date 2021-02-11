@@ -255,7 +255,6 @@ void parser::parse_perfdata(const char* str, std::list<perfdata>& pd) {
           "storage: invalid perfdata format: no numeric value after equal sign "
           "'{}'",
           std::string(s, tmp + i));
-      error = true;
       tmp = skip(tmp);
       continue;
     }
