@@ -45,7 +45,7 @@ persistent_file::persistent_file(const std::string& path)
   cs->set_substream(fs);
 
   // BBDO layer.
-  std::shared_ptr<bbdo::stream> bs(std::make_shared<bbdo::stream>());
+  std::shared_ptr<bbdo::stream> bs(std::make_shared<bbdo::stream>(true));
   bs->set_coarse(true);
   bs->set_negotiate(false);
   bs->set_substream(cs);
@@ -92,7 +92,7 @@ int persistent_file::write(std::shared_ptr<io::data> const& d) {
 int32_t persistent_file::stop() {
   int32_t retval = _substream->stop();
   log_v2::core()->info("persistent_file stopped with {} events acknowledged",
-      retval);
+                       retval);
   return retval;
 }
 

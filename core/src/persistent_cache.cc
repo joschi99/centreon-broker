@@ -17,16 +17,16 @@
  */
 
 #include "com/centreon/broker/persistent_cache.hh"
+#include <unistd.h>
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
-#include <unistd.h>
 #include "com/centreon/broker/bbdo/stream.hh"
 #include "com/centreon/broker/exceptions/shutdown.hh"
 #include "com/centreon/broker/file/opener.hh"
-#include "com/centreon/exceptions/msg_fmt.hh"
 #include "com/centreon/broker/log_v2.hh"
+#include "com/centreon/exceptions/msg_fmt.hh"
 
 using namespace com::centreon::exceptions;
 using namespace com::centreon::broker;
@@ -72,13 +72,15 @@ void persistent_cache::commit() {
   if (_write_file) {
     _write_file.reset();
     _read_file.reset();
-    log_v2::core()->info("renaming persistent_cache '{}' to '{}'", _cache_file, _old_file());
+    log_v2::core()->info("renaming persistent_cache '{}' to '{}'", _cache_file,
+                         _old_file());
     if (::rename(_cache_file.c_str(), _old_file().c_str())) {
       char const* msg(strerror(errno));
       throw msg_fmt("core: cache file '{}' could not be renamed to '{}' : {}",
                     _cache_file, _old_file(), msg);
     }
-    log_v2::core()->info("renaming persistent_cache '{}' to '{}'", _new_file(), _cache_file);
+    log_v2::core()->info("renaming persistent_cache '{}' to '{}'", _new_file(),
+                         _cache_file);
     if (::rename(_new_file().c_str(), _cache_file.c_str())) {
       // .old file will be renamed by the _open() method.
       char const* msg(strerror(errno));
@@ -89,7 +91,8 @@ void persistent_cache::commit() {
     log_v2::core()->info("persistent_cache '{}' done", _cache_file);
     log_v2::core()->info("removing persistent_cache '{}'", _old_file());
     if (unlink(_old_file().c_str())) {
-      log_v2::core()->error("removing persistent_cache '{}' failed", _old_file());
+      log_v2::core()->error("removing persistent_cache '{}' failed",
+                            _old_file());
     }
   }
 }
@@ -126,7 +129,7 @@ void persistent_cache::transaction() {
   opnr.set_auto_delete(false);
   opnr.set_max_size(0);
   std::shared_ptr<io::stream> fs(opnr.open());
-  std::shared_ptr<bbdo::stream> bs(new bbdo::stream);
+  std::shared_ptr<bbdo::stream> bs(new bbdo::stream(true));
   bs->set_substream(fs);
   bs->set_coarse(true);
   _write_file = std::static_pointer_cast<io::stream>(bs);
@@ -181,7 +184,7 @@ void persistent_cache::_open() {
   std::shared_ptr<io::stream> fs(opnr.open());
 
   // Create BBDO layer.
-  std::shared_ptr<bbdo::stream> bs(new bbdo::stream);
+  std::shared_ptr<bbdo::stream> bs(new bbdo::stream(true));
   bs->set_substream(fs);
   bs->set_coarse(true);
 

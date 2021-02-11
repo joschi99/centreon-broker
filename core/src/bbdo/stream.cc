@@ -25,6 +25,7 @@
 
 #include "com/centreon/broker/bbdo/ack.hh"
 #include "com/centreon/broker/bbdo/internal.hh"
+#include "com/centreon/broker/bbdo/stop.hh"
 #include "com/centreon/broker/bbdo/version_response.hh"
 #include "com/centreon/broker/exceptions/timeout.hh"
 #include "com/centreon/broker/io/protocols.hh"
@@ -38,12 +39,6 @@
 using namespace com::centreon::exceptions;
 using namespace com::centreon::broker;
 using namespace com::centreon::broker::bbdo;
-
-/**************************************
- *                                     *
- *      Input static functions         *
- *                                     *
- **************************************/
 
 /**
  *  Set a boolean within an object.
@@ -490,9 +485,10 @@ static io::raw* serialize(const io::data& e) {
 /**
  *  Default constructor.
  */
-stream::stream()
+stream::stream(bool is_input)
     : io::stream("BBDO"),
       _skipped(0),
+      _is_input{is_input},
       _coarse(false),
       _negotiate(true),
       _negotiated(false),
@@ -508,11 +504,18 @@ stream::stream()
  * @return The number of events to acknowledge.
  */
 int32_t stream::stop() {
+  /* A concrete explanation:
+   * I'm engine and my work is to send data to broker.
+   * Here, the user wants to stop me. I need to ask broker how many
+   * data I can acknowledge. */
+  if (!_is_input)
+    _send_event_stop_and_wait_for_ack();
+
   _substream->stop();
 
   /* We acknowledge peer about received events. */
   log_v2::core()->debug("bbdo stream stopped with {} events acknowledged",
-                       _events_received_since_last_ack);
+                        _events_received_since_last_ack);
   if (_events_received_since_last_ack)
     send_event_acknowledgement();
 
@@ -532,6 +535,44 @@ int stream::flush() {
   int retval = _acknowledged_events;
   _acknowledged_events -= retval;
   return retval;
+}
+
+/**
+ * @brief This method is called from a feeder stream. It is called when the
+ * stream is goint soon to be stopped. It sends a stop message to the peer to
+ * count how many events can be acknowledged.
+ */
+void stream::_send_event_stop_and_wait_for_ack() {
+  if (!_coarse) {
+    log_v2::bbdo()->debug("BBDO: sending stop packet to peer");
+
+    std::shared_ptr<bbdo::stop> stop_packet{std::make_shared<bbdo::stop>()};
+    _write(stop_packet);
+
+    log_v2::bbdo()->debug("BBDO: retrieving ack packet from peer");
+    std::shared_ptr<io::data> d;
+    time_t deadline = time(nullptr) + 5;
+
+    _read_any(d, deadline);
+    if (!d || d->type() != ack::static_type()) {
+      std::string msg;
+      if (d)
+        msg = fmt::format(
+            "BBDO: wrong message received (type {}) - expected ack event",
+            d->type());
+      else
+        msg = fmt::format(
+            "BBDO: no message received from peer. Cannot acknowledge properly "
+            "waiting messages before stopping.");
+      log_v2::bbdo()->error(msg);
+    } else {
+      log_v2::bbdo()->info(
+          "BBDO: received acknowledgement for {} events before finishing",
+          std::static_pointer_cast<ack const>(d)->acknowledged_events);
+      acknowledge_events(
+          std::static_pointer_cast<ack const>(d)->acknowledged_events);
+    }
+  }
 }
 
 /**
@@ -569,7 +610,6 @@ void stream::negotiate(stream::negotiation_type neg) {
   else
     deadline = time(nullptr) + _timeout;
 
-  // FIXME DBR
   _read_any(d, deadline);
   if (!d || d->type() != version_response::static_type()) {
     std::string msg;
@@ -734,9 +774,9 @@ bool stream::read(std::shared_ptr<io::data>& d, time_t deadline) {
             BBDO_VERSION_MAJOR, BBDO_VERSION_MINOR, BBDO_VERSION_PATCH);
       }
       log_v2::bbdo()->info(
-          "BBDO: peer is using protocol version {0}.{1}.{2} , we're using "
+          "BBDO: peer is using protocol version {}.{}.{} , we're using "
           "version "
-          "{3}.{4}.{5}",
+          "{}.{}.{}",
           version->bbdo_major, version->bbdo_minor, version->bbdo_patch,
           BBDO_VERSION_MAJOR, BBDO_VERSION_MINOR, BBDO_VERSION_PATCH);
       logging::info(logging::medium)
@@ -750,6 +790,9 @@ bool stream::read(std::shared_ptr<io::data>& d, time_t deadline) {
           std::static_pointer_cast<ack const>(d)->acknowledged_events);
       acknowledge_events(
           std::static_pointer_cast<ack const>(d)->acknowledged_events);
+    } else if ((event_id & 0Xffff) == 3) {
+      log_v2::bbdo()->info("BBDO: received stop from peer");
+      send_event_acknowledgement();
     }
 
     // Control messages.
