@@ -20,6 +20,7 @@
 
 #include "com/centreon/broker/bbdo/ack.hh"
 #include "com/centreon/broker/bbdo/factory.hh"
+#include "com/centreon/broker/bbdo/stop.hh"
 #include "com/centreon/broker/bbdo/version_response.hh"
 #include "com/centreon/broker/io/events.hh"
 #include "com/centreon/broker/io/protocols.hh"
@@ -64,6 +65,8 @@ void bbdo::load() {
                    version_response::entries);
   e.register_event(io::events::bbdo, bbdo::de_ack, "ack", &ack::operations,
                    ack::entries);
+  e.register_event(io::events::bbdo, bbdo::de_stop, "stop", &stop::operations,
+                   stop::entries);
 
   // Register BBDO protocol.
   io::protocols::instance().reg("BBDO", std::make_shared<bbdo::factory>(), 7,
