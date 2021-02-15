@@ -97,15 +97,15 @@ std::shared_ptr<asio::ip::tcp::acceptor> tcp_async::create_acceptor(
  * @param acceptor The acceptor that you want it to accept.
  */
 void tcp_async::start_acceptor(
-  std::shared_ptr<asio::ip::tcp::acceptor> acceptor) {
+    std::shared_ptr<asio::ip::tcp::acceptor> acceptor) {
   std::time_t now = std::time(nullptr);
-  for (auto it = _acceptor_available_con.begin(); it != _acceptor_available_con.end(); ) {
+  for (auto it = _acceptor_available_con.begin();
+       it != _acceptor_available_con.end();) {
     if (now >= it->second.second + 4) {
       log_v2::tcp()->info("Destroying too old/not used connection '{}'",
-          it->second.first->peer());
+                          it->second.first->peer());
       it = _acceptor_available_con.erase(it);
-    }
-    else
+    } else
       ++it;
   }
   tcp_connection::pointer new_connection =
