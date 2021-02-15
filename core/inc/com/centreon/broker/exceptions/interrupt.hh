@@ -20,7 +20,6 @@
 #define CCB_EXCEPTIONS_INTERRUPT_HH
 
 #include <exception>
-#include "com/centreon/broker/misc/stringifier.hh"
 #include "com/centreon/broker/namespace.hh"
 
 CCB_BEGIN()
@@ -32,25 +31,12 @@ namespace exceptions {
  *
  *  Exception that is thrown upon interrupted action.
  */
-class interrupt : protected misc::stringifier, public std::exception {
+class interrupt : public std::exception {
  public:
   interrupt() = default;
-  interrupt(interrupt const& other)
-      : misc::stringifier(other), std::exception(other) {}
+  interrupt(const interrupt& other) : std::exception(other) {}
   virtual ~interrupt() noexcept {}
   interrupt& operator=(const interrupt&) = delete;
-  virtual char const* what() const noexcept { return misc::stringifier::data(); }
-
-  /**
-   *  Insert data in message.
-   *
-   *  @param[in] t  Data to insert.
-   */
-  template <typename T>
-  interrupt& operator<<(T t) noexcept {
-    *(misc::stringifier*)this << t;
-    return *this;
-  }
 };
 }  // namespace exceptions
 
