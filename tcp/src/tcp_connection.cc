@@ -290,14 +290,14 @@ void tcp_connection::handle_read(const asio::error_code& ec,
  * @brief Shutdown the socket.
  */
 void tcp_connection::close() {
-  //if (!_closed) {
+  if (!_closed) {
     _closed = true;
     std::error_code ec;
     _socket.shutdown(asio::ip::tcp::socket::shutdown_both, ec);
     log_v2::tcp()->trace("socket shutdown with message: {}", ec.message());
     _socket.close(ec);
     log_v2::tcp()->trace("socket closed with message: {}", ec.message());
-  //}
+  }
 }
 
 /**
