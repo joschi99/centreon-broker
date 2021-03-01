@@ -130,7 +130,7 @@ int32_t reporting_stream::flush() {
 int32_t reporting_stream::stop() {
   int32_t retval = flush();
   log_v2::core()->info("reporting_stream stopped with {} events acknowledged",
-      retval);
+                       retval);
   return retval;
 }
 
@@ -145,7 +145,7 @@ int reporting_stream::write(std::shared_ptr<io::data> const& data) {
   // Take this event into account.
   ++_pending_events;
   if (!validate(data, "BAM-BI"))
-    return (0);
+    return 0;
 
   switch (data->type()) {
     case io::events::data_type<io::events::bam, bam::de_kpi_event>::value:
@@ -188,7 +188,7 @@ int reporting_stream::write(std::shared_ptr<io::data> const& data) {
   }
 
   // Event acknowledgement.
-  int retval(_ack_events);
+  int retval = _ack_events;
   _ack_events = 0;
   return retval;
 }
