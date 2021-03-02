@@ -27,12 +27,8 @@ using namespace com::centreon::broker::bam;
 /**
  *  Default constructor.
  */
-event_cache_visitor::event_cache_visitor() : io::stream("event_cache_visitor") {}
-
-/**
- *  Destructor.
- */
-event_cache_visitor::~event_cache_visitor() {}
+event_cache_visitor::event_cache_visitor()
+    : io::stream("event_cache_visitor") {}
 
 /**
  *  Commit all the event cache to another stream.

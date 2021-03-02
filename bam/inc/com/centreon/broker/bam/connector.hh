@@ -38,8 +38,8 @@ namespace bam {
 class connector : public io::endpoint {
  public:
   connector();
-  connector(connector const& other);
-  ~connector();
+  connector(const connector&) = delete;
+  ~connector() noexcept = default;
   connector& operator=(connector const&) = delete;
   void connect_monitoring(std::string const& ext_cmd_file,
                           database_config const& db_cfg,
@@ -50,8 +50,6 @@ class connector : public io::endpoint {
 
  private:
   enum stream_type { bam_monitoring_type = 1, bam_reporting_type };
-
-  void _internal_copy(connector const& other);
 
   database_config _db_cfg;
   std::string _ext_cmd_file;
